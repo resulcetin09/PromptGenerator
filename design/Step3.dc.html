@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Adım 3 · Sonuç</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F2;color:#0B1210;font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:#126B55}a:hover{color:#0C4D3D}
+.mono{font-family:"Geist Mono",ui-monospace,monospace}
+.muted{color:#5A635F}
+.shell{background:rgba(11,18,16,.035);box-shadow:inset 0 0 0 1px rgba(11,18,16,.06);padding:6px;border-radius:30px}
+.core{background:#FFFFFF;border-radius:24px;box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 1px 2px rgba(11,18,16,.04),0 30px 60px -30px rgba(11,18,16,.16)}
+.shell-dark{background:#0B1210;padding:6px;border-radius:30px;box-shadow:0 40px 80px -40px rgba(11,18,16,.55)}
+.core-dark{background:#111A17;border-radius:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.05);color:#E4ECE8}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:5px 12px;border-radius:999px;background:rgba(18,107,85,.08);color:#0E5A48;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:44px;border-radius:999px;font:600 13px "Plus Jakarta Sans",sans-serif;text-decoration:none;border:0;cursor:pointer;box-sizing:border-box;transition:transform 600ms cubic-bezier(.32,.72,0,1),background-color 600ms cubic-bezier(.32,.72,0,1)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#0B1210;color:#FFFFFF;padding:5px 5px 5px 20px}
+.btn-primary:hover{background:#126B55;color:#FFFFFF}
+.btn .ic{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;transition:transform 600ms cubic-bezier(.32,.72,0,1)}
+.btn:hover .ic{transform:translate(2px,-1px) scale(1.05)}
+.btn-quiet{background:rgba(11,18,16,.05);color:#0B1210;padding:0 18px}
+.btn-quiet:hover{background:rgba(11,18,16,.09);color:#0B1210}
+.btn-mint{background:#9FE6CA;color:#062019;padding:5px 5px 5px 18px}
+.btn-mint .ic{background:rgba(6,32,25,.1)}
+.btn-glass{background:rgba(255,255,255,.07);color:#E4ECE8;padding:0 16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.icon-btn{width:44px;height:44px;min-height:44px;padding:0;justify-content:center}
+.tag{padding:6px 12px;border-radius:999px;background:rgba(11,18,16,.05);font-size:12px;font-weight:500}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.rise{animation:rise 900ms cubic-bezier(.32,.72,0,1) both}
+.d1{animation-delay:80ms}.d2{animation-delay:160ms}.d3{animation-delay:240ms}.d4{animation-delay:320ms}
+</style>
+</helmet>
+<div style="width:1440px;height:1600px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F4F2">
+  <header style="padding-top:24px;display:flex;justify-content:center">
+    <nav aria-label="Ana gezinme" style="display:flex;align-items:center;gap:24px;padding:6px 6px 6px 14px;border-radius:999px;background:rgba(255,255,255,.72);backdrop-filter:blur(24px);box-shadow:inset 0 0 0 1px rgba(11,18,16,.06),0 20px 40px -24px rgba(11,18,16,.2)">
+      <span style="display:flex;align-items:center;gap:10px">
+        <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg3" x1="11" x2="52" y1="8" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9FE6CA"/><stop offset=".52" stop-color="#126B55"/><stop offset="1" stop-color="#0E3329"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="#101413"/><path fill="url(#lg3)" d="M18 15h20.5C49.1 15 56 21.3 56 31.1 56 41 48.9 47 38.6 47H30v7H18V15Zm12 10.7v10.6h8.2c3.6 0 5.8-2 5.8-5.2 0-3.3-2.2-5.4-5.8-5.4H30Z"/><path fill="#F7FAF8" d="m33.8 30.1 16.1 5.4-7.2 3.1 5.6 8.4-5.4 3.6-5.6-8.4-5.8 5.5 2.3-17.6Z"/></svg>
+        <strong style="font-size:14px;font-weight:700;letter-spacing:-.01em">Prompt Generator</strong>
+      </span>
+      <span style="display:flex;gap:2px">
+        <a href="Main.dc.html" aria-current="page" style="padding:10px 16px;border-radius:999px;background:rgba(11,18,16,.06);color:#0B1210;text-decoration:none;font-weight:600;font-size:13px">Oluştur</a>
+        <a href="Library.dc.html" style="padding:10px 16px;border-radius:999px;color:#5A635F;text-decoration:none;font-weight:500;font-size:13px">Kütüphane</a>
+      </span>
+      <span style="display:flex;gap:4px">
+        <button class="btn btn-quiet" type="button">Yeni çalışma</button>
+        <button class="btn btn-quiet icon-btn" type="button" aria-label="Koyu tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+      </span>
+    </nav>
+  </header>
+
+  <div style="flex-grow:1;display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:48px;padding:64px 80px 96px;box-sizing:border-box">
+    <main style="display:flex;flex-direction:column;gap:40px;min-width:0">
+      <div class="rise" style="display:flex;flex-direction:column;gap:20px">
+        <ol aria-label="Adımlar" style="list-style:none;margin:0;padding:0;display:flex;align-items:center;gap:8px;font-size:13px">
+          <li><a href="Main.dc.html" style="display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;color:#0B1210;text-decoration:none;background:rgba(18,107,85,.08)"><span style="width:24px;height:24px;border-radius:50%;background:#126B55;color:#FFFFFF;display:grid;place-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span style="font-weight:500">Fikir</span></a></li>
+          <li aria-hidden="true" style="width:24px;height:1px;background:#126B55"></li>
+          <li><a href="Step2.dc.html" style="display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;color:#0B1210;text-decoration:none;background:rgba(18,107,85,.08)"><span style="width:24px;height:24px;border-radius:50%;background:#126B55;color:#FFFFFF;display:grid;place-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span><span style="font-weight:500">Detaylar</span></a></li>
+          <li aria-hidden="true" style="width:24px;height:1px;background:#126B55"></li>
+          <li aria-current="step" style="display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;background:#0B1210;color:#FFFFFF"><span class="mono" style="width:24px;height:24px;border-radius:50%;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:11px">03</span><span style="font-weight:600">Sonuç</span></li>
+        </ol>
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px">
+          <h1 style="margin:0;font-size:68px;line-height:1;font-weight:600;letter-spacing:-.045em">Promptun hazır.</h1>
+          <span class="muted" style="display:inline-flex;align-items:center;gap:8px;font-size:13px;padding-bottom:8px"><span style="width:6px;height:6px;border-radius:50%;background:#1F8A6D"></span>Kütüphaneye kaydedildi</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap"><span class="tag" style="background:rgba(18,107,85,.1);color:#0E5A48;font-weight:600">Marka / Kimlik</span><span class="tag">ChatGPT (DALL-E 3)</span><span class="tag">Doğal dil</span><span class="tag">Türkçe şablon</span></div>
+      </div>
+
+      <div class="shell-dark rise d1">
+        <div class="core-dark">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 14px 14px 26px;border-bottom:1px solid rgba(255,255,255,.06)">
+            <span class="mono" style="font-size:11px;letter-spacing:.14em;color:#8FA39A">PROMPT · 1.284 KARAKTER</span>
+            <div style="display:flex;gap:6px">
+              <button type="button" class="btn btn-glass"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>Favori</button>
+              <button type="button" class="btn btn-mint">Kopyala<span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="13" height="13" x="9" y="9" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></span></button>
+            </div>
+          </div>
+          <pre class="mono" tabindex="0" style="margin:0;padding:28px 28px 32px;font-size:13.5px;line-height:1.8;white-space:pre-wrap;color:#E4ECE8">Şu fikir için bir görsel oluştur: Bir kahve markası için sade, sembolik bir logo.
+
+Kullanım yeri: logo, app icon, Instagram profil.
+Hedef kitle: Şehirde yaşayan, üçüncü dalga kahve seven 25-40 yaş.
+Marka kişiliği: sakin, rafine, güven veren.
+Anlam ve metafor: kahve çekirdeği ve negatif alan K harfi.
+Kompozisyon ve oran: 1:1 ikon, yatay wordmark.
+Marka: Kora.
+Marka renkleri: #163D32, #F5F1E8.
+Marka tipografisi: rafine serif.
+Markanın tonu: sakin.
+
+Markanın amacı ve hedef kitlesiyle ilişkili tek bir görsel fikir; tutarlı renk paleti, az ve okunaklı metin, belirgin negatif alan. Basit, dengeli ve küçük ölçekte okunabilen özgün sembol. En fazla iki anlamlı metafor; belirgin geometrik yapı. Mevcut markaları taklit etme. Sembol ve yazı arasındaki optik dengeyi koru. Tek renk uygulamada ve küçük boyutta ayırt edilebilir çizgiler kullan.
+
+Ana konu belirgin, ışık yönü tutarlı, renkler kontrollü. Kullanım alanına uygun kadraj ve oran. Malzeme dokuları gerçekçi; kenarlar temiz, detaylar birbiriyle uyumlu. Belirtilmeyen tasarım kararlarını konuya uygun tek bir yönde çöz.
+
+Kaçınılacak öğeler: neon, kalabalık arka plan</pre>
+        </div>
+      </div>
+
+      <div class="rise d2" style="display:flex;align-items:center;gap:14px;padding:8px 20px 8px 8px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(11,18,16,.06)">
+        <span style="padding:6px 12px;border-radius:999px;background:#FBF1DD;color:#6B4A10;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase">İpucu</span>
+        <span style="font-size:14px">Renk tutarlılığı için mümkünse hex kodları kullan.</span>
+      </div>
+
+      <section class="rise d3" aria-labelledby="variantsTitle" style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between">
+          <div style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Varyasyonlar</span><h2 id="variantsTitle" style="margin:0;font-size:28px;font-weight:600;letter-spacing:-.03em">Aynı brief, üç yaratıcı yön.</h2></div>
+          <button type="button" class="btn btn-primary">3 alternatif oluştur<span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,auto));gap:16px">
+          <article class="shell" style="grid-column:span 7;grid-row:span 2">
+            <div class="core" style="padding:26px;display:flex;flex-direction:column;gap:16px;height:100%;box-sizing:border-box">
+              <span class="mono muted" style="font-size:11px">01</span>
+              <strong style="font-size:24px;font-weight:600;letter-spacing:-.025em">Sade ve dengeli</strong>
+              <p class="mono muted" style="margin:0;font-size:12.5px;line-height:1.75">Şu fikir için bir görsel oluştur: Bir kahve markası için sade, sembolik bir logo. Yaratıcı yön: Sade ve dengeli.
+
+Kullanım yeri: logo, app icon, Instagram profil. Hedef kitle: Şehirde yaşayan, üçüncü dalga kahve seven…</p>
+              <div style="display:flex;gap:8px;margin-top:auto"><button type="button" class="btn btn-primary">Bu alternatifi kullan<span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span></button><button type="button" class="btn btn-quiet">Kopyala</button></div>
+            </div>
+          </article>
+          <article class="shell" style="grid-column:span 5">
+            <div class="core" style="padding:22px;display:flex;flex-direction:column;gap:10px">
+              <span class="mono muted" style="font-size:11px">02</span>
+              <strong style="font-size:18px;font-weight:600;letter-spacing:-.02em">Sinematik ve atmosferik</strong>
+              <p class="mono muted" style="margin:0;font-size:12px;line-height:1.7">…sembolik bir logo. Yaratıcı yön: Sinematik ve atmosferik.</p>
+              <div style="display:flex;gap:6px"><button type="button" class="btn btn-quiet">Kullan</button><button type="button" class="btn btn-quiet">Kopyala</button></div>
+            </div>
+          </article>
+          <article class="shell" style="grid-column:span 5">
+            <div class="core" style="padding:22px;display:flex;flex-direction:column;gap:10px">
+              <span class="mono muted" style="font-size:11px">03</span>
+              <strong style="font-size:18px;font-weight:600;letter-spacing:-.02em">Ürün ve mesaj odaklı</strong>
+              <p class="mono muted" style="margin:0;font-size:12px;line-height:1.7">…sembolik bir logo. Yaratıcı yön: Ürün ve mesaj odaklı.</p>
+              <div style="display:flex;gap:6px"><button type="button" class="btn btn-quiet">Kullan</button><button type="button" class="btn btn-quiet">Kopyala</button></div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <aside aria-label="Brief özeti" class="rise d4" style="display:flex;flex-direction:column;gap:16px;padding-top:4px">
+      <div class="shell">
+        <div class="core" style="padding:24px;display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span class="eyebrow">Brief özeti</span>
+            <a href="Step2.dc.html" style="font-size:13px;font-weight:600;text-decoration:none">Düzenle</a>
+          </div>
+          <dl style="margin:0;display:flex;flex-direction:column;gap:16px;font-size:14px">
+            <div><dt class="muted" style="font-size:12px">Kullanım yeri</dt><dd style="margin:3px 0 0;font-weight:500">logo, app icon, Instagram profil</dd></div>
+            <div><dt class="muted" style="font-size:12px">Hedef kitle</dt><dd style="margin:3px 0 0;font-weight:500">Şehirde yaşayan, üçüncü dalga kahve seven 25-40 yaş</dd></div>
+            <div><dt class="muted" style="font-size:12px">Marka kişiliği</dt><dd style="margin:3px 0 0;font-weight:500">sakin, rafine, güven veren</dd></div>
+            <div><dt class="muted" style="font-size:12px">Anlam ve metafor</dt><dd style="margin:3px 0 0;font-weight:500">kahve çekirdeği ve negatif alan K harfi</dd></div>
+            <div><dt class="muted" style="font-size:12px">Kompozisyon ve oran</dt><dd style="margin:3px 0 0;font-weight:500">1:1 ikon, yatay wordmark</dd></div>
+            <div><dt class="muted" style="font-size:12px">Kaçınılacak öğeler</dt><dd style="margin:3px 0 0;font-weight:500">neon, kalabalık arka plan</dd></div>
+          </dl>
+          <div style="display:flex;align-items:center;gap:8px;padding-top:18px;border-top:1px solid rgba(11,18,16,.06)"><span class="mono" style="padding:4px 10px;border-radius:999px;background:rgba(11,18,16,.05);font-size:11px">brandkit</span><span class="muted" style="font-size:12px">Rafine seviyede uygulandı</span></div>
+        </div>
+      </div>
+      <button type="button" class="btn btn-quiet" style="justify-content:center;min-height:52px">Yeni çalışma başlat</button>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -152,12 +152,6 @@ function setJson(key,value) {
   try { localStorage.setItem(key,JSON.stringify(value)); storageFailed=false; return true; }
   catch { storageFailed=true; showToast("Tarayıcı kaydı kullanılamıyor. Promptunu kopyalayarak sakla."); return false; }
 }
-function showToast(message) {
-  clearTimeout(toastTimer);
-  $("toast").textContent=message;
-  $("toast").classList.add("visible");
-  toastTimer=setTimeout(()=>$("toast").classList.remove("visible"),3000);
-}
 function detectCategory(text) {
   const n=normalize(text);
   // Explicit formats take precedence over incidental brand/product mentions.
@@ -166,128 +160,311 @@ function detectCategory(text) {
   const scored=categories.map(c=>({c,score:c.keywords.reduce((s,k)=>s+(new RegExp("\\b"+normalize(k)+"(?:\\b|[a-z]+)").test(n)?1:0),0)})).sort((a,b)=>b.score-a.score);
   return scored[0].score ? scored[0].c : null;
 }
+// Turkish question wording shown in the wizard (engine keeps ids/labels).
+const questionPrompts = [
+  ["Nerede kullanılacak?", "Hedef kitle kim?", "Marka kişiliği nasıl olsun?", "Logo için bir anlam veya metafor var mı?", "Kompozisyon veya oran tercihin ne?"],
+  ["Ürün tam olarak ne?", "Hangi yüzey ve malzeme görünsün?", "Sahne nerede geçsin?", "Işık nasıl olsun?", "Oran veya teknik kısıt var mı?"],
+  ["Karakter kim ya da ne?", "Çizim stili nasıl olsun?", "Poz ve ifade nasıl olsun?", "Renk paleti ne olsun?", "Nerede kullanılacak?"],
+  ["Postun ana mesajı ne?", "Hangi platform ve oran?", "Ana görsel ya da obje ne olsun?", "Tasarım dili nasıl olsun?", "Görselde CTA veya metin olacak mı?"],
+  ["Kaç görsellik seri olsun?", "Serinin kampanya konusu ne?", "Her post için kısa mesajları yaz.", "Grid ritmi nasıl olsun?", "Seri boyunca neler sabit kalsın?"],
+  ["Ana konu ne?", "Duygu ve atmosfer nasıl olsun?", "Teknik ya da stil ne olsun?", "Renk paleti ne olsun?", "Oran ne olsun?"],
+  ["Sahnede ne var?", "Kamera ve açı nasıl olsun?", "Işık nasıl olsun?", "Ortamda hangi detaylar olsun?", "Teknik bir notun var mı?"],
+  ["Video kaç saniye olsun?", "Kaç sahne olsun?", "Kamera hareketi nasıl olsun?", "Ses veya müzik istiyor musun?", "Final karesi nasıl bitsin?"]
+];
+categories.forEach((c,i)=>c.questions.forEach((q,j)=>q[1]=questionPrompts[i][j]));
+
+const DRAFT_KEY = "prompt-generator:draft";
+const ui = { step: 1, view: "create", briefTimer: null, stale: false, restoring: false };
+const ICONS = {
+  arrowUpRight: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>',
+  arrowRight: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>',
+  star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg>'
+};
+const pad2 = (n) => String(n).padStart(2, "0");
+const optionText = (id) => { const s = $(id); return s.options[s.selectedIndex]?.textContent || ""; };
+function el(tag, className, text) { const node = document.createElement(tag); if (className) node.className = className; if (text != null) node.textContent = text; return node; }
+function button(className, label, onClick, iconHtml) {
+  const b = el("button", className); b.type = "button";
+  b.append(document.createTextNode(label));
+  if (iconHtml) { const ic = el("span", "ic"); ic.innerHTML = iconHtml; b.append(ic); }
+  if (onClick) b.addEventListener("click", onClick);
+  return b;
+}
+function copyButton(getText, opts) {
+  if (window.CopyButton) return window.CopyButton.create(getText, opts);
+  return button("btn btn-quiet", (opts && opts.label) || "Kopyala", () => navigator.clipboard?.writeText(getText()).catch(() => {}));
+}
+function refreshSegments() { if (window.SegmentedControl) window.SegmentedControl.refreshAll(); }
+
+function showToast(message) {
+  clearTimeout(toastTimer);
+  $("toast").textContent = message;
+  $("toast").classList.add("visible");
+  toastTimer = setTimeout(() => $("toast").classList.remove("visible"), 3500);
+}
+function setFieldError(inputId, errorId, show) {
+  $(errorId).hidden = !show;
+  if (inputId) { if (show) $(inputId).setAttribute("aria-invalid", "true"); else $(inputId).removeAttribute("aria-invalid"); }
+}
+
+/* ---------- Category ---------- */
 function selectedCategory() {
-  return categories.find(c=>c.id===$("categorySelect").value) || detectCategory($("ideaInput").value);
+  return categories.find(c => c.id === $("categorySelect").value) || detectCategory($("ideaInput").value);
 }
 function selectCategory(category) {
-  if (state.category?.id===category?.id) return;
-  if(state.category) state.answerCache[state.category.id]={...state.answers};
-  state.category=category;
-  state.answers=category ? {...state.answerCache[category.id]} : {};
-  state.questionIndex=0;
-  if(category?.id==="seriesPost") {
+  if (state.category?.id === category?.id) return;
+  if (state.category) state.answerCache[state.category.id] = { ...state.answers };
+  state.category = category;
+  state.answers = category ? { ...state.answerCache[category.id] } : {};
+  state.questionIndex = 0;
+  if (category?.id === "seriesPost") {
     state.answers.seriesCount ||= /\b9/.test($("ideaInput").value) ? "9" : "3";
     state.answers.rhythm ||= "Başlık odaklı, ürün odaklı, marka detayı";
   }
+  if (category) setFieldError(null, "categoryError", false);
   renderQuestions();
 }
-function renderQuestions() {
-  const category=state.category;
-  $("detectedBadge").textContent=category?.name || "Kategori seçilmedi";
-  $("questionNav").hidden=!category;
-  if(!category) {
-    $("questionList").className="question-list empty-state";
-    $("questionList").textContent="Fikrini yaz veya bir kategori seç.";
-    updateProgress(); return;
-  }
-  $("questionList").className="question-list";
-  const [id,,placeholder]=category.questions[state.questionIndex];
-  const value=state.answers[id] || "";
-  const label=labels[id]?.[0] || id;
-  let field;
-  if(id==="seriesCount") field='<select id="answerInput"><option value="3">3 post</option><option value="9">9 post</option></select>';
-  else if(id==="postMessages") field='<textarea id="answerInput" rows="4" placeholder="Her postun mesajını ayrı satıra yaz.">'+escapeHtml(value)+'</textarea>';
-  else if(id==="scenes") field='<input id="answerInput" type="number" min="1" max="12" placeholder="3" value="'+escapeHtml(value)+'">';
-  else field='<input id="answerInput" type="text" value="'+escapeHtml(value)+'" placeholder="'+escapeHtml(placeholder)+'">';
-  $("questionList").innerHTML='<div class="question-card"><label for="answerInput"><span>'+escapeHtml(label)+'</span><small>'+escapeHtml(id==="postMessages" ? "Serideki her görsel için ayrı bir mesaj." : placeholder)+'</small>'+field+'</label></div>';
-  if(id==="seriesCount") $("answerInput").value=value || "3";
-  $("answerInput").addEventListener("input", e=>{state.answers[id]=e.target.value.trim();updateProgress();});
-  $("answerInput").addEventListener("keydown",e=>{
-    if(e.key==="Enter" && e.target.tagName!=="TEXTAREA") {e.preventDefault();moveQuestion(1);}
+function buildCategoryChips() {
+  const wrap = $("categoryChips"); wrap.replaceChildren();
+  [["auto", "Otomatik"], ...categories.map(c => [c.id, c.name])].forEach(([value, label]) => {
+    const chip = el("button", "chip", label); chip.type = "button"; chip.dataset.value = value;
+    chip.addEventListener("click", () => { $("categorySelect").value = value; $("categorySelect").dispatchEvent(new Event("change")); });
+    wrap.append(chip);
   });
-  $("prevQuestion").disabled=state.questionIndex===0;
-  $("nextQuestion").textContent=state.questionIndex===category.questions.length-1 ? "Prompta geç" : "Sonraki";
-  $("questionPosition").textContent=(state.questionIndex+1)+" / "+category.questions.length;
-  updateProgress();
+}
+function updateCategoryUI() {
+  const auto = $("categorySelect").value === "auto";
+  const detected = detectCategory($("ideaInput").value);
+  $("categoryChips").querySelectorAll(".chip").forEach(chip => {
+    const value = chip.dataset.value;
+    chip.setAttribute("aria-pressed", String(auto ? value === "auto" : value === $("categorySelect").value));
+    if (value === "auto") chip.textContent = "Otomatik" + (auto && detected ? " · " + detected.name : "");
+  });
+  const c = state.category, badge = $("detectedBadge");
+  badge.classList.toggle("is-idle", !c);
+  $("detectedText").textContent = c ? c.name + (auto ? " algılandı" : " seçildi") : ($("ideaInput").value.trim() ? "Kategori seçilmedi" : "Kategori bekleniyor");
+}
+
+/* ---------- Steps & views ---------- */
+function goStep(n, opts = {}) {
+  n = Math.max(1, Math.min(3, n));
+  if (n === 3 && !state.prompt) {
+    if (!$("ideaInput").value.trim()) { showIdeaError(); n = 1; }
+    else if (!generatePrompt({ quiet: true })) n = 1;
+  }
+  const changed = n !== ui.step;
+  ui.step = n;
+  document.querySelectorAll("#createView .step").forEach(section => {
+    const active = Number(section.dataset.step) === n;
+    section.hidden = !active;
+    if (active && changed && !opts.instant) { section.classList.remove("is-entering"); void section.offsetWidth; section.classList.add("is-entering"); }
+  });
+  document.querySelectorAll(".step-pill").forEach(pill => {
+    const s = Number(pill.dataset.step);
+    pill.classList.toggle("is-done", s < n);
+    if (s === n) pill.setAttribute("aria-current", "step"); else pill.removeAttribute("aria-current");
+  });
+  document.querySelectorAll(".step-line").forEach((line, i) => line.classList.toggle("is-done", i + 1 < n));
+  $("liveBrief").hidden = n === 3; $("briefSummary").hidden = n !== 3;
+  if (n === 2) renderQuestions();
+  if (n === 3) renderResult();
+  updateTitle();
+  if (opts.focus !== false && changed && !ui.restoring) {
+    if (n === 2 && state.category && $("answerInput")) $("answerInput").focus({ preventScroll: true });
+    else $("step" + n + "Title").focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+  saveDraft();
+}
+function switchView(view) {
+  ui.view = view;
+  $("createView").hidden = view !== "create"; $("libraryView").hidden = view !== "library";
+  document.querySelectorAll(".nav-tab").forEach(tab => { if (tab.dataset.view === view) tab.setAttribute("aria-current", "page"); else tab.removeAttribute("aria-current"); });
+  if (view === "library") { renderHistory(); $("libraryTitle").focus({ preventScroll: true }); }
+  else $("step" + ui.step + "Title").focus({ preventScroll: true });
+  window.scrollTo({ top: 0 });
+  updateTitle();
+}
+function updateTitle() {
+  document.title = ui.view === "library" ? "Kütüphane · Prompt Generator" : "Adım " + ui.step + " · " + ["Fikir", "Detaylar", "Sonuç"][ui.step - 1] + " · Prompt Generator";
+}
+function showIdeaError() { setFieldError("ideaInput", "ideaError", true); }
+
+/* ---------- Questions ---------- */
+function exampleText(placeholder) { return /^Örn\.\s*/.test(placeholder) ? placeholder.replace(/^Örn\.\s*/, "") : ""; }
+function renderQuestions() {
+  const c = state.category;
+  updateCategoryUI();
+  $("questionEmpty").hidden = !!c; $("questionCard").hidden = !c; $("questionOverviewWrap").hidden = !c;
+  $("questionIntro").textContent = c ? c.name + " için " + c.questions.length + " kısa soru. Hepsi isteğe bağlı; boş bıraktıkların prompta girmez." : "Sorular kategoriye göre gelir.";
+  if (!c) { updateProgress(); scheduleBrief(); return; }
+  const total = c.questions.length, index = state.questionIndex;
+  const [id, question, placeholder] = c.questions[index];
+  const value = state.answers[id] || "";
+  const list = $("questionList"); list.replaceChildren();
+  const title = el("label", "question-title", question); title.htmlFor = "answerInput";
+  list.append(title);
+  let field;
+  if (id === "seriesCount") {
+    field = el("select", "answer-field");
+    [["3", "3 görsel"], ["9", "9 görsel"]].forEach(([v, t]) => { const o = el("option", null, t); o.value = v; field.append(o); });
+    field.value = value || "3";
+    field.addEventListener("change", () => { state.answers[id] = field.value; onBriefChange(); updateProgress(); renderOverview(); });
+  } else if (id === "scenes") {
+    field = el("input", "answer-field"); field.type = "number"; field.min = "1"; field.max = "12"; field.inputMode = "numeric"; field.placeholder = "3"; field.value = value;
+  } else {
+    field = el("textarea", "answer-field"); field.rows = id === "postMessages" ? 4 : 2; field.value = value;
+    field.placeholder = id === "postMessages" ? "Her postun mesajını ayrı satıra yaz." : placeholder;
+  }
+  field.id = "answerInput";
+  if (id !== "seriesCount") {
+    field.addEventListener("input", () => { state.answers[id] = field.value.trim(); onBriefChange(); updateProgress(); renderOverview(); });
+  }
+  field.addEventListener("keydown", e => {
+    if (e.key !== "Enter" || e.isComposing) return;
+    const multiline = id === "postMessages";
+    if (e.metaKey || e.ctrlKey || (!e.shiftKey && !multiline)) { e.preventDefault(); moveQuestion(1); }
+  });
+  list.append(field);
+  if (id === "postMessages") list.append(el("p", "muted small question-hint", "Her satır bir post olur. Enter yeni satır, ⌘/Ctrl+Enter sonraki soru."));
+  const example = exampleText(placeholder);
+  if (example && id !== "seriesCount") {
+    const row = el("div", "example-row");
+    row.append(el("span", "muted small", "Örnekten başla"));
+    const chip = el("button", "chip chip-example"); chip.type = "button";
+    chip.innerHTML = ICONS.plus; chip.append(document.createTextNode(example));
+    chip.setAttribute("aria-label", "Örneği kullan: " + example);
+    chip.addEventListener("click", () => { field.value = example; field.dispatchEvent(new Event("input")); field.focus(); });
+    row.append(chip); list.append(row);
+  }
+  if (id === "seriesCount" && window.SegmentedControl) window.SegmentedControl.fromSelect(field, { label: question });
+  $("questionPosition").textContent = "SORU " + pad2(index + 1) + " / " + pad2(total);
+  $("prevLabel").textContent = index === 0 ? "Fikre dön" : "Önceki";
+  $("nextLabel").textContent = index === total - 1 ? "Promptu oluştur" : "Sonraki";
+  $("skipQuestion").hidden = index === total - 1;
+  updateProgress(); renderOverview(); scheduleBrief();
 }
 function moveQuestion(delta) {
-  if(!state.category) return;
-  if(delta>0 && state.questionIndex===state.category.questions.length-1) { $("generateBtn").focus(); return; }
-  state.questionIndex=Math.max(0,Math.min(state.questionIndex+delta,state.category.questions.length-1));
-  renderQuestions();$("answerInput").focus();
+  if (!state.category) return;
+  const last = state.category.questions.length - 1;
+  if (delta > 0 && state.questionIndex === last) { if (generatePrompt()) goStep(3); return; }
+  if (delta < 0 && state.questionIndex === 0) { goStep(1); return; }
+  state.questionIndex = Math.max(0, Math.min(state.questionIndex + delta, last));
+  renderQuestions(); $("answerInput").focus(); saveDraft();
 }
+function jumpToQuestion(i) { state.questionIndex = i; renderQuestions(); $("answerInput").focus(); saveDraft(); }
 function updateProgress() {
-  const total=state.category?.questions.length || 0;
-  const answered=state.category ? state.category.questions.filter(([id])=>state.answers[id]).length : 0;
-  $("progressBadge").textContent=answered+"/"+total+" tamamlandı";
-  $("progressFill").style.width=(total ? answered/total*100 : 0)+"%";
+  const c = state.category, total = c?.questions.length || 0;
+  const answered = c ? c.questions.filter(([id]) => state.answers[id]).length : 0;
+  $("progressBadge").textContent = total ? answered + " / " + total + " yanıt" : "";
+  const bar = $("progressSegments"); bar.replaceChildren(); bar.style.setProperty("--count", total || 5);
+  bar.setAttribute("aria-valuemax", String(total)); bar.setAttribute("aria-valuenow", String(answered));
+  bar.setAttribute("aria-valuetext", answered + " / " + total + " yanıtlandı");
+  (c?.questions || []).forEach(([id], i) => {
+    const seg = el("span"); if (i === state.questionIndex) seg.className = "is-current"; else if (state.answers[id]) seg.className = "is-done";
+    bar.append(seg);
+  });
 }
-function syncButtons() {
-  const ready=Boolean($("ideaInput").value.trim());
-  $("generateBtn").disabled=!ready; $("variantBtn").disabled=!ready;
-  $("copyBtn").disabled=!state.prompt;
-  const item=readHistory().find(x=>x.id===state.currentPromptId);
-  $("favoriteBtn").disabled=!item;
-  $("favoriteBtn").setAttribute("aria-pressed",String(Boolean(item?.favorite)));
-  const label=item?.favorite ? "Favorilerden çıkar" : "Favorilere ekle";
-  $("favoriteBtn").setAttribute("aria-label",label);$("favoriteBtn").title=label;
+function renderOverview() {
+  const c = state.category, list = $("questionOverview"); list.replaceChildren();
+  if (!c) return;
+  c.questions.forEach(([id, question], i) => {
+    const li = el("li"), item = el("button", "overview-item"); item.type = "button";
+    const answer = state.answers[id];
+    const current = i === state.questionIndex;
+    if (current) item.setAttribute("aria-current", "step"); else if (answer) item.classList.add("is-done");
+    const num = el("span", "overview-num", pad2(i + 1));
+    if (answer && !current) num.innerHTML = ICONS.check;
+    item.append(num, el("span", "overview-q", question), el("span", "overview-a", answer || ""));
+    item.append(el("span", "overview-tag", current ? "Şu an" : answer ? "Düzenle" : ""));
+    item.setAttribute("aria-label", (i + 1) + ". soru: " + question + (answer ? " — yanıt: " + answer : " — boş"));
+    item.addEventListener("click", () => jumpToQuestion(i));
+    li.append(item); list.append(li);
+  });
 }
+
+/* ---------- Brand & reference ---------- */
 function getBrandProfile() {
-  return {name:$("brandName").value.trim(),palette:$("brandPalette").value.trim(),typography:$("brandTypography").value.trim(),voice:$("brandVoice").value.trim()};
+  return { name: $("brandName").value.trim(), palette: $("brandPalette").value.trim(), typography: $("brandTypography").value.trim(), voice: $("brandVoice").value.trim() };
 }
-function fillBrand(profile={}) {
-  for(const [key,id] of Object.entries({name:"brandName",palette:"brandPalette",typography:"brandTypography",voice:"brandVoice"})) $(id).value=profile[key] || "";
+function fillBrand(profile = {}) {
+  for (const [key, id] of Object.entries({ name: "brandName", palette: "brandPalette", typography: "brandTypography", voice: "brandVoice" })) $(id).value = profile[key] || "";
+  updateOptionCards();
 }
 function renderBrands() {
-  const selected=$("brandSelect").value;
-  $("brandSelect").innerHTML='<option value="">Profil seç</option>'+getJson(storageKeys.brandProfiles,[]).map(p=>'<option value="'+escapeHtml(p.name)+'">'+escapeHtml(p.name)+'</option>').join("");
-  $("brandSelect").value=selected;
+  const selected = $("brandSelect").value;
+  $("brandSelect").replaceChildren();
+  const first = el("option", null, "Profil seç"); first.value = ""; $("brandSelect").append(first);
+  getJson(storageKeys.brandProfiles, []).forEach(p => { const o = el("option", null, p.name); o.value = p.name; $("brandSelect").append(o); });
+  $("brandSelect").value = selected;
 }
 function saveBrandProfile() {
-  const profile=getBrandProfile();
-  if(!profile.name) { $("brandName").focus();return showToast("Marka adını yaz."); }
-  const profiles=getJson(storageKeys.brandProfiles,[]);
-  if(!setJson(storageKeys.brandProfiles,[profile,...profiles.filter(p=>p.name!==profile.name)])) return;
-  renderBrands();$("brandSelect").value=profile.name;$("brandStatus").textContent="Kaydedildi";showToast("Marka profili kaydedildi.");
+  const profile = getBrandProfile();
+  if (!profile.name) { $("brandName").focus(); return showToast("Marka adını yaz."); }
+  const profiles = getJson(storageKeys.brandProfiles, []);
+  if (!setJson(storageKeys.brandProfiles, [profile, ...profiles.filter(p => p.name !== profile.name)])) return;
+  renderBrands(); $("brandSelect").value = profile.name; $("brandStatus").textContent = "Kaydedildi"; showToast(profile.name + " profili kaydedildi.");
 }
 function loadBrandProfile() {
-  const profile=getJson(storageKeys.brandProfiles,[]).find(p=>p.name===$("brandSelect").value);
-  if(!profile) return;
-  fillBrand(profile);$("brandStatus").textContent="Yüklendi";showToast(profile.name+" yüklendi.");
+  const profile = getJson(storageKeys.brandProfiles, []).find(p => p.name === $("brandSelect").value);
+  if (!profile) return;
+  fillBrand(profile); onBriefChange(); showToast(profile.name + " yüklendi.");
 }
-function clearBrandProfile() { fillBrand();$("brandSelect").value="";$("brandStatus").textContent="İsteğe bağlı"; }
+function clearBrandProfile() { fillBrand(); $("brandSelect").value = ""; onBriefChange(); }
+function firstHex(text) { const m = String(text || "").match(/#(?:[0-9a-f]{6}|[0-9a-f]{3})\b/i); return m ? m[0] : ""; }
+function updateOptionCards() {
+  const b = getBrandProfile(), hasBrand = Object.values(b).some(Boolean);
+  $("brandTitle").textContent = b.name ? "Marka profili · " + b.name : "Marka profili";
+  $("brandSummary").textContent = hasBrand ? [b.palette, b.typography, b.voice].filter(Boolean).join(" · ") || "Profil dolduruluyor" : "Renk, tipografi ve ton";
+  const mark = $("brandMark"), hex = firstHex(b.palette);
+  if (b.name) { mark.textContent = b.name.trim().charAt(0).toLocaleUpperCase("tr-TR"); mark.classList.toggle("has-brand", !!hex); mark.style.background = hex || ""; }
+  else if (!mark.querySelector("svg")) { mark.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>'; mark.classList.remove("has-brand"); mark.style.background = ""; }
+  if ($("brandStatus").textContent !== "Kaydedildi" || !hasBrand) $("brandStatus").textContent = hasBrand ? "Aktif" : "İsteğe bağlı";
+  $("brandStatus").classList.toggle("is-active", hasBrand);
+  const refCount = ["refColor", "refTypography", "refStyle", "negativeInput"].filter(id => $(id).value.trim()).length + (state.referenceFile ? 1 : 0);
+  $("referenceStatus").textContent = refCount ? refCount + " not" : "İsteğe bağlı";
+  $("referenceStatus").classList.toggle("is-active", refCount > 0);
+}
 function removeReference() {
-  if(state.referenceUrl) URL.revokeObjectURL(state.referenceUrl);
-  state.referenceUrl=null;state.referenceFile=null;$("referenceInput").value="";
-  $("previewArea").replaceChildren();$("previewArea").className="preview-area empty-state";
+  if (state.referenceUrl) URL.revokeObjectURL(state.referenceUrl);
+  state.referenceUrl = null; state.referenceFile = null; $("referenceInput").value = "";
+  $("previewArea").replaceChildren(); $("previewArea").className = "preview-area is-empty";
+  updateOptionCards(); onBriefChange();
 }
 function handleReferenceUpload(event) {
-  const file=event.target.files?.[0]; if(!file) return;
-  if(!["image/png","image/jpeg","application/pdf"].includes(file.type) || file.size>10*1024*1024) {
-    event.target.value="";return showToast("En fazla 10 MB PNG, JPG veya PDF seç.");
+  const file = event.target.files?.[0]; if (!file) return;
+  if (!["image/png", "image/jpeg", "application/pdf"].includes(file.type) || file.size > 10 * 1024 * 1024) {
+    event.target.value = ""; return showToast("En fazla 10 MB PNG, JPG veya PDF seç.");
   }
-  if(state.referenceUrl) URL.revokeObjectURL(state.referenceUrl);
-  state.referenceFile=file;state.referenceUrl=URL.createObjectURL(file);
-  const preview=$("previewArea");preview.replaceChildren();preview.className="preview-area";
-  const media=document.createElement(file.type==="application/pdf" ? "embed":"img");
-  media.src=state.referenceUrl;
-  if(media.tagName==="EMBED"){media.type="application/pdf";media.setAttribute("title",file.name);}
-  else media.alt="Referans: "+file.name;
-  const remove=document.createElement("button");remove.type="button";remove.className="ghost-button";remove.textContent="Kaldır";remove.addEventListener("click",removeReference);
-  preview.append(media,remove);
-  const name=document.createElement("span");name.className="helper";name.textContent=file.name;preview.append(name);
-  showToast("Referans eklendi.");
+  if (state.referenceUrl) URL.revokeObjectURL(state.referenceUrl);
+  state.referenceFile = file; state.referenceUrl = URL.createObjectURL(file);
+  const preview = $("previewArea"); preview.replaceChildren(); preview.className = "preview-area";
+  const media = document.createElement(file.type === "application/pdf" ? "embed" : "img");
+  media.src = state.referenceUrl;
+  if (media.tagName === "EMBED") { media.type = "application/pdf"; media.setAttribute("title", file.name); }
+  else media.alt = "Referans: " + file.name;
+  preview.append(media, button("btn btn-quiet btn-sm", "Kaldır", removeReference), el("span", "muted small file-name", file.name));
+  updateOptionCards(); onBriefChange(); showToast("Referans eklendi.");
 }
-function collectContext() {
+
+/* ---------- Context ---------- */
+function collectContext(silent) {
   selectCategory(selectedCategory());
-  if(!state.category) { showToast("Bir kategori seç.");$("categorySelect").focus();return null; }
-  return {idea:$("ideaInput").value.trim(),category:state.category,tool:$("toolSelect").value,
-    dialect:/Leonardo|Playground/.test($("toolSelect").value)?"tag":"natural",
-    quality:$("qualitySelect").value,skillIntensity:$("skillIntensity").value,language:$("languageSelect").value,
-    answers:{...state.answers},brand:getBrandProfile(),negative:$("negativeInput").value.trim(),
-    reference:{hasFile:Boolean(state.referenceFile),fileName:state.referenceFile?.name || "",color:$("refColor").value.trim(),typography:$("refTypography").value.trim(),style:$("refStyle").value.trim()}
+  if (!state.category) {
+    if (!silent) { setFieldError(null, "categoryError", true); showToast("Bir kategori seç."); }
+    return null;
+  }
+  return { idea: $("ideaInput").value.trim(), category: state.category, tool: $("toolSelect").value,
+    dialect: /Leonardo|Playground/.test($("toolSelect").value) ? "tag" : "natural",
+    quality: $("qualitySelect").value, skillIntensity: $("skillIntensity").value, language: $("languageSelect").value,
+    answers: { ...state.answers }, brand: getBrandProfile(), negative: $("negativeInput").value.trim(),
+    reference: { hasFile: Boolean(state.referenceFile), fileName: state.referenceFile?.name || "", color: $("refColor").value.trim(), typography: $("refTypography").value.trim(), style: $("refStyle").value.trim() }
   };
 }
+
+/* ---------- Prompt engine ---------- */
 function localized(ctx,tr,en) {return ctx.language==="tr" ? tr:en;}
 function buildSkillBlock(ctx) {
   const tr=ctx.language==="tr", id=ctx.category.id;
@@ -363,154 +540,303 @@ function buildTips(ctx) {
   if(ctx.language==="en") tips.push("İngilizce şablon kullanıldı. Yazdığın serbest metinler çevrilmeden korundu.");
   return tips;
 }
+/* ---------- Live brief ---------- */
+function skillNames(category) { return category.skillProfile.map(s => s === "brandkit" ? "brandkit" : "high-end-visual-design"); }
+function onBriefChange() {
+  if (ui.restoring) return;
+  if (state.prompt && !ui.stale) { ui.stale = true; if (ui.step === 3) renderResult(); }
+  updateOptionCards(); scheduleBrief();
+}
+function scheduleBrief() { clearTimeout(ui.briefTimer); ui.briefTimer = setTimeout(() => { renderBrief(); saveDraft(); }, 120); }
+function renderBrief() {
+  const c = state.category;
+  $("briefCategory").textContent = c?.name || "Henüz belli değil";
+  $("briefSkills").textContent = c ? "skill · " + skillNames(c).join(" + ") : "Fikrini yazınca belirlenir";
+  const dl = $("briefSettings"); dl.replaceChildren();
+  const brand = getBrandProfile();
+  [["Araç", $("toolSelect").value], ["Biçim", /Leonardo|Playground/.test($("toolSelect").value) ? "Etiket tabanlı" : "Doğal dil"], ["Detay", optionText("qualitySelect")], ["Sanat yönetimi", optionText("skillIntensity")], ["Şablon dili", optionText("languageSelect")], ["Marka", brand.name || "—"]]
+    .forEach(([k, v]) => dl.append(el("dt", null, k), el("dd", null, v)));
+  const preview = $("livePreview"), idea = $("ideaInput").value.trim();
+  const ctx = idea ? collectContext(true) : null;
+  preview.classList.toggle("is-placeholder", !ctx);
+  preview.textContent = ctx ? buildPrompt(ctx) : idea ? "Kategori seç ya da fikrini biraz aç; prompt yapısı kategoriye göre kurulur." : "Fikrini yazdığında prompt burada şekillenmeye başlar.";
+  renderSummary();
+}
+function renderSummary() {
+  const dl = $("summaryList"); dl.replaceChildren();
+  const c = state.category;
+  const rows = [];
+  if (c) c.questions.forEach(([id]) => { if (state.answers[id]) rows.push([labels[id]?.[0] || id, state.answers[id]]); });
+  const brand = getBrandProfile();
+  if (brand.name) rows.push(["Marka", [brand.name, brand.palette].filter(Boolean).join(" · ")]);
+  if ($("negativeInput").value.trim()) rows.push(["Kaçınılacak öğeler", $("negativeInput").value.trim()]);
+  if (!rows.length) rows.push(["Yanıtlar", "Soruları boş bıraktın; prompt yalnızca fikrinden ve ayarlardan kuruldu."]);
+  rows.forEach(([k, v]) => { const d = el("div"); d.append(el("dt", null, k), el("dd", null, v)); dl.append(d); });
+  const skills = $("summarySkills"); skills.replaceChildren();
+  if (c) { skillNames(c).forEach(s => skills.append(el("span", "skill-chip", s))); skills.append(el("span", "muted small", optionText("skillIntensity") + " seviyede uygulandı")); }
+}
+
+/* ---------- Generate & result ---------- */
+function generatePrompt(opts = {}) {
+  if (!$("ideaInput").value.trim()) { showIdeaError(); if (ui.step !== 1) goStep(1); $("ideaInput").focus(); return false; }
+  const ctx = collectContext(); if (!ctx) { if (ui.step !== 1) goStep(1); $("categoryChips").querySelector(".chip")?.focus(); return false; }
+  state.prompt = buildPrompt(ctx); state.lastContext = ctx; ui.stale = false;
+  state.variants = []; $("variantsOutput").replaceChildren();
+  const saved = saveHistory(ctx, state.prompt); savePreferences();
+  $("saveStatus").textContent = saved ? "Kütüphaneye kaydedildi" : "";
+  renderResult(); saveDraft();
+  if (!opts.quiet && saved && !storageFailed && ui.step === 3) showToast("Prompt yeniden oluşturuldu.");
+  return true;
+}
+function renderResult() {
+  const has = Boolean(state.prompt);
+  $("resultEmpty").hidden = has; $("resultCard").hidden = !has; $("variantsSection").hidden = !has; $("tipsOutput").hidden = !has;
+  $("staleNote").hidden = !(has && ui.stale);
+  $("step3Title").textContent = has ? "Promptun hazır." : "Promptunu oluştur.";
+  $("promptOutput").textContent = state.prompt;
+  $("promptMeta").textContent = "Prompt · " + state.prompt.length.toLocaleString("tr-TR") + " karakter";
+  const ctx = state.lastContext, meta = $("resultMeta"); meta.replaceChildren();
+  if (has && ctx) {
+    const cat = el("span", "tag is-accent", ctx.category.name); meta.append(cat);
+    [ctx.tool, ctx.dialect === "tag" ? "Etiket tabanlı" : "Doğal dil", ctx.language === "tr" ? "Türkçe şablon" : "English template"].forEach(t => meta.append(el("span", "tag", t)));
+  }
+  renderTips(ctx); syncButtons(); renderSummary();
+}
 function renderTips(ctx) {
-  $("tipsOutput").replaceChildren();
-  buildTips(ctx).forEach(t=>{const div=document.createElement("div");div.className="tip";div.textContent=t;$("tipsOutput").append(div);});
-}
-function readHistory() {
-  return getJson(storageKeys.history,[]).filter(x=>typeof x.id==="string" && typeof x.prompt==="string" && typeof x.idea==="string");
-}
-function saveHistory(ctx,prompt) {
-  const id=crypto.randomUUID();
-  const item={id,createdAt:new Date().toISOString(),category:ctx.category.name,categoryId:ctx.category.id,tool:ctx.tool,favorite:false,idea:ctx.idea,prompt,context:ctx};
-  const history=readHistory();
-  if(!setJson(storageKeys.history,[item,...history].slice(0,200))) {state.currentPromptId=null;return false;}
-  state.currentPromptId=id;renderHistory();return true;
-}
-function generatePrompt() {
-  const ctx=collectContext();if(!ctx?.idea) return;
-  state.prompt=buildPrompt(ctx);$("promptOutput").textContent=state.prompt;
-  state.variants=[];$("variantsOutput").replaceChildren();renderTips(ctx);
-  const saved=saveHistory(ctx,state.prompt);savePreferences();syncButtons();
-  if(saved&&!storageFailed) showToast("Prompt hazır ve geçmişe kaydedildi.");
+  const box = $("tipsOutput"); box.replaceChildren();
+  if (!ctx) return;
+  buildTips(ctx).forEach(t => { const d = el("div", "tip"); d.append(el("span", "tip-tag", "İpucu"), el("span", null, t)); box.append(d); });
+  if (state.missingReference) { const d = el("div", "tip"); d.append(el("span", "tip-tag", "Not"), el("span", null, "Bu kaydın referans dosyasını yeniden ekle: " + state.missingReference)); box.append(d); }
 }
 function generateVariants() {
-  const ctx=collectContext();if(!ctx?.idea)return;
-  const angles=localized(ctx,["Sade ve dengeli","Sinematik ve atmosferik","Ürün ve mesaj odaklı"],["Minimal and balanced","Cinematic and atmospheric","Product and message focused"]);
-  state.variants=angles.map(angle=>{const context={...ctx,idea:ctx.idea+". "+localized(ctx,"Yaratıcı yön: ","Creative direction: ")+angle};return {angle,context,prompt:buildPrompt(context)};});
-  $("variantsOutput").replaceChildren();
-  state.variants.forEach((v,i)=>{
-    const article=document.createElement("article");article.className="variant";
-    const title=document.createElement("strong");title.textContent=(i+1)+". "+v.angle;
-    const pre=document.createElement("pre");pre.textContent=v.prompt;
-    const row=document.createElement("div");row.className="button-row";
-    const copy=document.createElement("button");copy.className="ghost-button";copy.textContent="Kopyala";copy.addEventListener("click",()=>copyText(v.prompt));
-    const use=document.createElement("button");use.className="secondary-button";use.textContent="Bu alternatifi kullan";use.addEventListener("click",()=>{
-      state.prompt=v.prompt;$("promptOutput").textContent=v.prompt;
-      $("ideaInput").value=v.context.idea;
-      const saved=saveHistory(v.context,v.prompt);renderTips(v.context);syncButtons();
-      if(saved)showToast("Alternatif seçildi ve kaydedildi.");
+  const ctx = collectContext(); if (!ctx?.idea) return generatePrompt();
+  const angles = localized(ctx, ["Sade ve dengeli", "Sinematik ve atmosferik", "Ürün ve mesaj odaklı"], ["Minimal and balanced", "Cinematic and atmospheric", "Product and message focused"]);
+  state.variants = angles.map(angle => { const context = { ...ctx, idea: ctx.idea + ". " + localized(ctx, "Yaratıcı yön: ", "Creative direction: ") + angle }; return { angle, context, prompt: buildPrompt(context) }; });
+  const grid = $("variantsOutput"); grid.replaceChildren();
+  state.variants.forEach((v, i) => {
+    const featured = i === 0;
+    const article = el("article", "shell variant" + (featured ? " is-featured" : ""));
+    const core = el("div", "core");
+    core.append(el("span", "variant-num", pad2(i + 1)), el("strong", null, v.angle), el("pre", null, v.prompt));
+    const row = el("div", "row-actions");
+    const use = featured ? button("btn btn-primary", "Bu alternatifi kullan", null, ICONS.arrowRight) : button("btn btn-quiet", "Kullan");
+    use.setAttribute("aria-label", v.angle + " alternatifini kullan");
+    use.addEventListener("click", () => {
+      state.prompt = v.prompt; state.lastContext = v.context; ui.stale = false; $("ideaInput").value = v.context.idea;
+      const saved = saveHistory(v.context, v.prompt);
+      $("saveStatus").textContent = saved ? "Kütüphaneye kaydedildi" : "";
+      renderResult(); scheduleBrief(); $("promptOutput").focus();
+      if (saved) showToast("Alternatif seçildi ve kaydedildi.");
     });
-    row.append(copy,use);article.append(title,pre,row);$("variantsOutput").append(article);
+    row.append(use, copyButton(() => v.prompt, { label: "Kopyala" }));
+    core.append(row); article.append(core); grid.append(article);
   });
-  renderTips(ctx);showToast("Üç alternatif hazır.");
+  showToast("Üç alternatif hazır.");
 }
-async function copyText(text) {
-  if(!text)return;
-  try {await navigator.clipboard.writeText(text);}
-  catch {
-    const textarea=document.createElement("textarea");textarea.value=text;textarea.style.cssText="position:fixed;opacity:0";document.body.append(textarea);textarea.select();
-    let copied=false;
-    try {copied=document.execCommand("copy");}catch{}
-    textarea.remove();
-    if(!copied) {showToast("Kopyalanamadı. Prompt metnini seçip elle kopyala.");return;}
-  }
-  showToast("Prompt kopyalandı.");
+function syncButtons() {
+  const item = readHistory().find(x => x.id === state.currentPromptId);
+  const fav = Boolean(item?.favorite);
+  $("favoriteBtn").disabled = !item;
+  $("favoriteBtn").setAttribute("aria-pressed", String(fav));
+  $("favoriteLabel").textContent = fav ? "Favoride" : "Favori";
+  $("favoriteBtn").setAttribute("aria-label", fav ? "Favorilerden çıkar" : "Favorilere ekle");
+  $("copyBtn").disabled = !state.prompt;
+}
+
+/* ---------- History ---------- */
+function readHistory() {
+  return getJson(storageKeys.history, []).filter(x => typeof x.id === "string" && typeof x.prompt === "string" && typeof x.idea === "string");
+}
+function saveHistory(ctx, prompt) {
+  const id = crypto.randomUUID();
+  const item = { id, createdAt: new Date().toISOString(), category: ctx.category.name, categoryId: ctx.category.id, tool: ctx.tool, favorite: false, idea: ctx.idea, prompt, context: ctx };
+  if (!setJson(storageKeys.history, [item, ...readHistory()].slice(0, 200))) { state.currentPromptId = null; return false; }
+  state.currentPromptId = id; renderHistory(); return true;
 }
 function toggleFavorite(id) {
-  const next=readHistory().map(x=>x.id===id?{...x,favorite:!x.favorite}:x);
-  if(setJson(storageKeys.history,next)){renderHistory();syncButtons();}
+  const next = readHistory().map(x => x.id === id ? { ...x, favorite: !x.favorite } : x);
+  if (setJson(storageKeys.history, next)) { renderHistory(); syncButtons(); }
 }
 function restoreHistory(item) {
-  const ctx=item.context;
-  removeReference();clearBrandProfile();
-  ["refColor","refTypography","refStyle","negativeInput"].forEach(id=>$(id).value="");
-  state.answerCache={};state.category=null;state.answers={};
-  $("ideaInput").value=item.idea;
-  const category=categories.find(c=>c.id===ctx?.category?.id || c.id===item.categoryId || c.name===item.category) || detectCategory(item.idea);
-  $("categorySelect").value=category?.id || "auto";selectCategory(category);
-  if(ctx){
-    state.answers={...ctx.answers};fillBrand(ctx.brand);
-    const mapping={tool:"toolSelect",quality:"qualitySelect",skillIntensity:"skillIntensity",language:"languageSelect"};
-    for(const [key,id] of Object.entries(mapping)) if(ctx[key]) $(id).value=ctx[key];
-    $("refColor").value=ctx.reference?.color||"";$("refTypography").value=ctx.reference?.typography||"";$("refStyle").value=ctx.reference?.style||"";$("negativeInput").value=ctx.negative||"";
-    renderTips({...ctx,reference:{...ctx.reference,hasFile:false}});
-    if(ctx.reference?.hasFile) {const note=document.createElement("div");note.className="tip";note.textContent="Bu kaydın referans dosyasını yeniden ekle: "+ctx.reference.fileName;$("tipsOutput").append(note);}
-  } else {
-    $("toolSelect").value=item.tool;
-    $("tipsOutput").replaceChildren();
-  }
-  state.prompt=item.prompt;state.currentPromptId=item.id;state.variants=[];
-  $("promptOutput").textContent=item.prompt;$("variantsOutput").replaceChildren();
-  renderQuestions();syncButtons();showToast("Çalışma yüklendi. Alanları değiştirerek yeniden üretebilirsin.");
+  const ctx = item.context;
+  ui.restoring = true;
+  removeReference(); fillBrand(); $("brandSelect").value = "";
+  ["refColor", "refTypography", "refStyle", "negativeInput"].forEach(id => $(id).value = "");
+  state.answerCache = {}; state.category = null; state.answers = {}; state.missingReference = "";
+  $("ideaInput").value = item.idea; setFieldError("ideaInput", "ideaError", false);
+  const category = categories.find(c => c.id === ctx?.category?.id || c.id === item.categoryId || c.name === item.category) || detectCategory(item.idea);
+  $("categorySelect").value = category?.id || "auto"; selectCategory(category);
+  if (ctx) {
+    state.answers = { ...ctx.answers }; fillBrand(ctx.brand);
+    const mapping = { tool: "toolSelect", quality: "qualitySelect", skillIntensity: "skillIntensity", language: "languageSelect" };
+    for (const [key, id] of Object.entries(mapping)) if (ctx[key]) $(id).value = ctx[key];
+    $("refColor").value = ctx.reference?.color || ""; $("refTypography").value = ctx.reference?.typography || ""; $("refStyle").value = ctx.reference?.style || ""; $("negativeInput").value = ctx.negative || "";
+    if (ctx.reference?.hasFile) state.missingReference = ctx.reference.fileName;
+  } else $("toolSelect").value = item.tool;
+  state.prompt = item.prompt; state.currentPromptId = item.id; state.variants = []; state.lastContext = ctx ? { ...ctx, reference: { ...ctx.reference, hasFile: false } } : null;
+  ui.stale = false; $("variantsOutput").replaceChildren(); $("saveStatus").textContent = "Kütüphaneden yüklendi";
+  refreshSegments(); updateOptionCards(); ui.restoring = false;
+  switchView("create"); goStep(3); renderBrief();
+  showToast("Çalışma yüklendi. Alanları değiştirip yeniden oluşturabilirsin.");
+}
+function historyCard(item, variant) {
+  const featured = variant === "featured";
+  const article = el("article", "history-card" + (featured ? " is-featured shell-dark" : " shell" + (variant === "wide" ? " span-5" : "")));
+  const core = el("div", featured ? "core-dark" : "core");
+  const top = el("div", "history-top"), tags = el("div", "history-tags");
+  tags.append(el("span", "tag is-accent", item.category), el("span", "tag", String(item.tool).replace(/\s*\(.*\)$/, "")));
+  const star = el("button", "star-btn"); star.type = "button"; star.innerHTML = ICONS.star;
+  star.setAttribute("aria-pressed", String(!!item.favorite)); star.setAttribute("aria-label", item.favorite ? "Favorilerden çıkar" : "Favorilere ekle");
+  star.addEventListener("click", () => toggleFavorite(item.id));
+  top.append(tags, star); core.append(top);
+  const date = new Date(item.createdAt), when = isNaN(date) ? "" : date.toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  if (featured) core.append(el("span", "history-date", "Son çalışma · " + when));
+  core.append(el("h3", "history-title", item.idea));
+  core.append(el("pre", null, item.prompt.slice(0, featured ? 600 : 220)));
+  const foot = el("div", "history-foot"), actions = el("div", "row-actions");
+  if (!featured) foot.append(el("span", "history-date", when));
+  const load = featured ? button("btn btn-primary", "Yükle ve düzenle", () => restoreHistory(item), ICONS.arrowUpRight) : button("btn btn-quiet btn-sm", "Yükle", () => restoreHistory(item));
+  load.setAttribute("aria-label", "Yükle ve düzenle: " + item.idea);
+  if (featured) { load.style.background = "var(--mint)"; load.style.color = "#062019"; }
+  const copy = copyButton(() => item.prompt, { label: "Kopyala" }); if (!featured) copy.classList.add("btn-sm");
+  actions.append(copy, load); foot.append(actions); core.append(foot);
+  article.append(core); return article;
 }
 function renderHistory() {
-  const history=readHistory(),term=normalize($("historySearch").value),mode=$("historyMode").value,category=$("historyCategory").value;
-  const filtered=history.filter(x=>(!term||normalize(x.idea+" "+x.prompt+" "+x.category+" "+x.tool).includes(term))&&(mode!=="favorites"||x.favorite)&&(!category||x.categoryId===category||x.category===categories.find(c=>c.id===category)?.name));
-  $("clearHistoryBtn").disabled=!history.length;
-  const list=$("historyList");list.replaceChildren();list.className="history-list"+(!filtered.length?" empty-state":"");
-  if(!filtered.length){list.textContent=history.length?"Bu filtrelere uygun çalışma yok.":"Henüz çalışma yok.";return;}
-  filtered.forEach(item=>{
-    const article=document.createElement("article");article.className="history-item";
-    const meta=document.createElement("div");meta.className="history-meta";meta.textContent=new Date(item.createdAt).toLocaleString("tr-TR")+" · "+item.category+" · "+item.tool+(item.favorite?" · Favori":"");
-    const title=document.createElement("strong");title.textContent=item.idea;
-    const pre=document.createElement("pre");pre.textContent=item.prompt.slice(0,350)+(item.prompt.length>350?"…":"");
-    const row=document.createElement("div");row.className="history-actions";
-    const load=document.createElement("button");load.className="secondary-button";load.textContent="Yükle ve düzenle";load.addEventListener("click",()=>restoreHistory(item));
-    const favorite=document.createElement("button");favorite.className="ghost-button";favorite.textContent=item.favorite?"Favorilerden çıkar":"Favorilere ekle";favorite.setAttribute("aria-pressed",String(item.favorite));favorite.addEventListener("click",()=>toggleFavorite(item.id));
-    row.append(load,favorite);article.append(meta,title,pre,row);list.append(article);
-  });
+  const history = readHistory(), term = normalize($("historySearch").value.trim()), mode = $("historyMode").value, category = $("historyCategory").value;
+  const filtered = history.filter(x => (!term || normalize(x.idea + " " + x.prompt + " " + x.category + " " + x.tool).includes(term)) && (mode !== "favorites" || x.favorite) && (!category || x.categoryId === category || x.category === categories.find(c => c.id === category)?.name));
+  const favCount = history.filter(x => x.favorite).length;
+  $("libraryStats").textContent = history.length ? history.length + " çalışma · " + favCount + " favori · Yalnızca bu tarayıcıda saklanır." : "Oluşturduğun promptlar burada birikir.";
+  $("clearHistoryBtn").hidden = !history.length;
+  const list = $("historyList"); list.replaceChildren();
+  if (!filtered.length) {
+    const wrap = el("div", "shell history-empty"), core = el("div", "core empty-card");
+    if (!history.length) {
+      core.append(el("strong", null, "Henüz çalışma yok"), el("p", "muted", "Her oluşturduğun prompt buraya kaydedilir. Beğendiklerini yıldızla işaretleyip hızlıca bulursun."), button("btn btn-primary", "İlk promptunu oluştur", () => { switchView("create"); goStep(1); }, ICONS.arrowUpRight));
+    } else {
+      const parts = [term ? "“" + $("historySearch").value.trim() + "”" : "", category ? optionText("historyCategory") : "", mode === "favorites" ? "favoriler" : ""].filter(Boolean);
+      core.append(el("strong", null, "Sonuç yok"), el("p", "muted", parts.join(" · ") + " için eşleşen çalışma bulunamadı."), button("btn btn-quiet", "Filtreleri temizle", () => { $("historySearch").value = ""; $("historyCategory").value = ""; $("historyMode").value = "all"; refreshSegments(); renderHistory(); $("historySearch").focus(); }));
+    }
+    wrap.append(core); list.append(wrap); return;
+  }
+  filtered.forEach((item, i) => list.append(historyCard(item, i === 0 ? "featured" : i < 3 ? "wide" : "normal")));
 }
-function confirmAction(message) {
-  const dialog=$("confirmDialog");
-  $("confirmMessage").textContent=message;
-  dialog.returnValue="cancel";
-  return new Promise(resolve=>{
-    dialog.addEventListener("close",()=>resolve(dialog.returnValue==="confirm"),{once:true});
-    dialog.showModal();
-  });
+function confirmAction(message, actionLabel) {
+  const dialog = $("confirmDialog");
+  $("confirmMessage").textContent = message; $("confirmAction").textContent = actionLabel || "Temizle";
+  dialog.returnValue = "cancel";
+  return new Promise(resolve => { dialog.addEventListener("close", () => resolve(dialog.returnValue === "confirm"), { once: true }); dialog.showModal(); });
 }
 async function clearHistory() {
-  const history=readHistory();if(!history.length)return;
-  if(!await confirmAction("Kaydedilmiş "+history.length+" çalışma silinsin mi?"))return;
-  if(setJson(storageKeys.history,[])){state.currentPromptId=null;renderHistory();syncButtons();showToast("Geçmiş temizlendi.");}
+  const history = readHistory(); if (!history.length) return;
+  if (!await confirmAction("Kaydedilmiş " + history.length + " çalışma silinsin mi? Bu işlem geri alınamaz.", "Hepsini sil")) return;
+  if (setJson(storageKeys.history, [])) { state.currentPromptId = null; renderHistory(); syncButtons(); showToast("Geçmiş temizlendi."); }
 }
+
+/* ---------- Preferences, theme, draft ---------- */
 function savePreferences() {
-  setJson(storageKeys.preferences,{tool:$("toolSelect").value,quality:$("qualitySelect").value,intensity:$("skillIntensity").value,language:$("languageSelect").value,theme:document.documentElement.classList.contains("dark")?"dark":"light"});
+  setJson(storageKeys.preferences, { tool: $("toolSelect").value, quality: $("qualitySelect").value, intensity: $("skillIntensity").value, language: $("languageSelect").value, theme: document.documentElement.classList.contains("dark") ? "dark" : "light" });
 }
 function updateThemeButton() {
-  const dark=document.documentElement.classList.contains("dark");
-  $("themeBtn").setAttribute("aria-pressed",String(dark));
-  $("themeBtn").title=dark?"Açık tema":"Koyu tema";$("themeBtn").setAttribute("aria-label",$("themeBtn").title);
+  const dark = document.documentElement.classList.contains("dark");
+  $("themeBtn").setAttribute("aria-pressed", String(dark));
+  $("themeBtn").title = dark ? "Açık tema" : "Koyu tema"; $("themeBtn").setAttribute("aria-label", $("themeBtn").title);
 }
 function loadPreferences() {
-  const p=getJson(storageKeys.preferences,{});
-  for(const [key,id] of Object.entries({tool:"toolSelect",quality:"qualitySelect",intensity:"skillIntensity",language:"languageSelect"})) if([...$(id).options].some(o=>o.value===p[key])) $(id).value=p[key];
-  document.documentElement.classList.toggle("dark",p.theme==="dark");updateThemeButton();
+  const p = getJson(storageKeys.preferences, {});
+  for (const [key, id] of Object.entries({ tool: "toolSelect", quality: "qualitySelect", intensity: "skillIntensity", language: "languageSelect" })) if ([...$(id).options].some(o => o.value === p[key])) $(id).value = p[key];
+  const dark = p.theme ? p.theme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.classList.toggle("dark", dark); updateThemeButton();
+}
+function saveDraft() {
+  if (ui.restoring) return;
+  try {
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify({
+      idea: $("ideaInput").value, categoryValue: $("categorySelect").value, answers: state.answers, answerCache: state.answerCache,
+      questionIndex: state.questionIndex, step: ui.step, prompt: state.prompt, currentPromptId: state.currentPromptId, lastContext: state.lastContext, stale: ui.stale,
+      ref: { color: $("refColor").value, typography: $("refTypography").value, style: $("refStyle").value }, negative: $("negativeInput").value, brand: getBrandProfile()
+    }));
+  } catch { /* private mode: draft stays in memory only */ }
+}
+function restoreDraft() {
+  let d; try { d = JSON.parse(sessionStorage.getItem(DRAFT_KEY)); } catch { d = null; }
+  if (!d || typeof d !== "object") return 1;
+  ui.restoring = true;
+  $("ideaInput").value = d.idea || "";
+  if ([...$("categorySelect").options].some(o => o.value === d.categoryValue)) $("categorySelect").value = d.categoryValue;
+  state.answerCache = d.answerCache && typeof d.answerCache === "object" ? d.answerCache : {};
+  selectCategory(selectedCategory());
+  if (state.category) { state.answers = d.answers && typeof d.answers === "object" ? d.answers : {}; state.questionIndex = Math.min(Math.max(0, d.questionIndex | 0), state.category.questions.length - 1); }
+  $("refColor").value = d.ref?.color || ""; $("refTypography").value = d.ref?.typography || ""; $("refStyle").value = d.ref?.style || ""; $("negativeInput").value = d.negative || "";
+  fillBrand(d.brand || {});
+  if (typeof d.prompt === "string" && d.prompt) { state.prompt = d.prompt; state.currentPromptId = d.currentPromptId || null; state.lastContext = d.lastContext || null; ui.stale = !!d.stale; }
+  ui.restoring = false;
+  return [1, 2, 3].includes(d.step) ? d.step : 1;
 }
 async function resetAll() {
-  if(($("ideaInput").value.trim()||state.referenceFile||Object.values(state.answers).some(Boolean)||Object.values(getBrandProfile()).some(Boolean)||["refColor","refTypography","refStyle","negativeInput"].some(id=>$(id).value)) && !await confirmAction("Açık çalışma temizlensin mi? Kaydedilmiş geçmiş ve markalar korunur."))return;
-  removeReference();clearBrandProfile();
-  state.category=null;state.answers={};state.answerCache={};state.prompt="";state.currentPromptId=null;state.questionIndex=0;state.variants=[];
-  ["ideaInput","refColor","refTypography","refStyle","negativeInput"].forEach(id=>$(id).value="");
-  $("categorySelect").value="auto";$("promptOutput").textContent="Promptun burada görünecek.";$("tipsOutput").replaceChildren();$("variantsOutput").replaceChildren();renderQuestions();syncButtons();$("ideaInput").focus();
+  const dirty = $("ideaInput").value.trim() || state.referenceFile || Object.values(state.answers).some(Boolean) || Object.values(getBrandProfile()).some(Boolean) || ["refColor", "refTypography", "refStyle", "negativeInput"].some(id => $(id).value);
+  if (dirty && !await confirmAction("Açık çalışma temizlensin mi? Kütüphane ve kayıtlı markalar korunur.", "Temizle")) return;
+  ui.restoring = true;
+  removeReference(); fillBrand(); $("brandSelect").value = "";
+  state.category = null; state.answers = {}; state.answerCache = {}; state.prompt = ""; state.currentPromptId = null; state.questionIndex = 0; state.variants = []; state.lastContext = null; state.missingReference = "";
+  ["ideaInput", "refColor", "refTypography", "refStyle", "negativeInput"].forEach(id => $(id).value = "");
+  $("categorySelect").value = "auto"; $("variantsOutput").replaceChildren(); $("saveStatus").textContent = "";
+  setFieldError("ideaInput", "ideaError", false); setFieldError(null, "categoryError", false);
+  ui.stale = false; ui.restoring = false;
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
+  renderQuestions(); updateOptionCards(); syncButtons();
+  switchView("create"); goStep(1, { focus: false }); $("ideaInput").focus();
 }
+
+/* ---------- Init ---------- */
 function initialize() {
-  categories.forEach(c=>{
-    for(const id of ["categorySelect","historyCategory"]){const opt=document.createElement("option");opt.value=c.id;opt.textContent=c.name;$(id).append(opt);}
+  categories.forEach(c => {
+    for (const id of ["categorySelect", "historyCategory"]) { const opt = document.createElement("option"); opt.value = c.id; opt.textContent = c.name; $(id).append(opt); }
   });
-  const bindings={generateBtn:generatePrompt,variantBtn:generateVariants,copyBtn:()=>copyText(state.prompt),favoriteBtn:()=>toggleFavorite(state.currentPromptId),saveBrandBtn:saveBrandProfile,clearBrandBtn:clearBrandProfile,clearHistoryBtn:clearHistory,resetBtn:resetAll,prevQuestion:()=>moveQuestion(-1),nextQuestion:()=>moveQuestion(1)};
-  Object.entries(bindings).forEach(([id,handler])=>$(id).addEventListener("click",handler));
-  $("brandSelect").addEventListener("change",loadBrandProfile);
-  $("referenceInput").addEventListener("change",handleReferenceUpload);
-  $("ideaInput").addEventListener("input",()=>{if($("categorySelect").value==="auto")selectCategory(selectedCategory());syncButtons();});
-  $("categorySelect").addEventListener("change",()=>{selectCategory(selectedCategory());syncButtons();});
-  $("historySearch").addEventListener("input",renderHistory);
-  ["historyMode","historyCategory"].forEach(id=>$(id).addEventListener("change",renderHistory));
-  $("themeBtn").addEventListener("click",()=>{document.documentElement.classList.toggle("dark");updateThemeButton();savePreferences();});
-  ["toolSelect","qualitySelect","skillIntensity","languageSelect"].forEach(id=>$(id).addEventListener("change",savePreferences));
-  document.addEventListener("keydown",()=>document.documentElement.classList.add("keyboard"));
-  document.addEventListener("pointerdown",()=>document.documentElement.classList.remove("keyboard"));
-  loadPreferences();renderBrands();renderHistory();syncButtons();
+  buildCategoryChips();
+  loadPreferences();
+  if (window.SegmentedControl) {
+    [["languageSelect", "Şablon dili"], ["qualitySelect", "Detay seviyesi"], ["skillIntensity", "Sanat yönetimi"], ["historyMode", "Göster"]].forEach(([id, label]) => window.SegmentedControl.fromSelect($(id), { label }));
+  }
+  if (window.CopyButton) window.CopyButton.attach($("copyBtn"), () => state.prompt, { label: "Kopyala", copiedLabel: "Kopyalandı", errorLabel: "Kopyalanamadı" });
+  else { $("copyBtn").textContent = "Kopyala"; $("copyBtn").className = "btn btn-quiet"; $("copyBtn").addEventListener("click", () => navigator.clipboard?.writeText(state.prompt)); }
+
+  const bindings = { generateBtn: () => generatePrompt(), variantBtn: generateVariants, favoriteBtn: () => toggleFavorite(state.currentPromptId), saveBrandBtn: saveBrandProfile, clearBrandBtn: clearBrandProfile, clearHistoryBtn: clearHistory, resetBtn: resetAll, prevQuestion: () => moveQuestion(-1), nextQuestion: () => moveQuestion(1), skipQuestion: () => moveQuestion(1) };
+  Object.entries(bindings).forEach(([id, handler]) => $(id).addEventListener("click", handler));
+  document.querySelectorAll("[data-go-step]").forEach(b => b.addEventListener("click", () => goStep(Number(b.dataset.goStep))));
+  document.querySelectorAll(".step-pill").forEach(b => b.addEventListener("click", () => goStep(Number(b.dataset.step))));
+  document.querySelectorAll(".nav-tab").forEach(b => b.addEventListener("click", () => switchView(b.dataset.view)));
+  document.querySelectorAll('[data-action="generate"]').forEach(b => b.addEventListener("click", () => generatePrompt()));
+  document.querySelectorAll('[data-action="reset"]').forEach(b => b.addEventListener("click", resetAll));
+
+  $("ideaInput").addEventListener("input", () => {
+    if ($("ideaInput").value.trim()) setFieldError("ideaInput", "ideaError", false);
+    if ($("categorySelect").value === "auto") selectCategory(selectedCategory());
+    updateCategoryUI(); onBriefChange();
+  });
+  $("ideaInput").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!$("ideaInput").value.trim()) return showIdeaError(); goStep(2); }
+  });
+  $("categorySelect").addEventListener("change", () => { selectCategory(selectedCategory()); updateCategoryUI(); onBriefChange(); });
+  ["toolSelect", "qualitySelect", "skillIntensity", "languageSelect"].forEach(id => $(id).addEventListener("change", () => { savePreferences(); onBriefChange(); }));
+  ["refColor", "refTypography", "refStyle", "negativeInput", "brandName", "brandPalette", "brandTypography", "brandVoice"].forEach(id => $(id).addEventListener("input", onBriefChange));
+  $("brandSelect").addEventListener("change", loadBrandProfile);
+  $("referenceInput").addEventListener("change", handleReferenceUpload);
+  $("historySearch").addEventListener("input", renderHistory);
+  ["historyMode", "historyCategory"].forEach(id => $(id).addEventListener("change", renderHistory));
+  $("themeBtn").addEventListener("click", () => { document.documentElement.classList.toggle("dark"); updateThemeButton(); savePreferences(); });
+  document.addEventListener("keydown", e => {
+    document.documentElement.classList.add("keyboard");
+    if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && ui.view === "create" && !e.defaultPrevented) {
+      if (ui.step === 1) { e.preventDefault(); $("ideaInput").value.trim() ? goStep(2) : showIdeaError(); }
+      else if (ui.step === 2 && state.category) { e.preventDefault(); moveQuestion(1); }
+    }
+  });
+  document.addEventListener("pointerdown", () => document.documentElement.classList.remove("keyboard"));
+
+  renderBrands(); renderHistory();
+  const step = restoreDraft();
+  renderQuestions(); updateOptionCards(); updateCategoryUI(); renderBrief(); syncButtons(); refreshSegments();
+  goStep(step, { focus: false, instant: true });
 }
 initialize();

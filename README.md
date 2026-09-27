@@ -2,6 +2,16 @@
 
 Tarayıcıda çalışan, harici AI API kullanmayan statik prompt oluşturucu.
 
+## Arayüz
+
+- Adım adım akış: **Fikir → Detaylar → Sonuç**. Sağdaki canlı brief, prompt'u sen yazdıkça önizler.
+- Sorular tek tek sorulur; örnek cevaplar tek tıkla eklenir. Enter sonraki soruya geçer, çok satırlı alanlarda ⌘/Ctrl+Enter.
+- Kütüphane ayrı sekmededir: arama, kategori ve favori filtresi.
+- Taslak (fikir, cevaplar, adım) sekme açık kaldıkça `sessionStorage`'da korunur; sayfa yenilense de kaybolmaz.
+- Tasarım kaynağı `design/` klasöründedir (Claude Design kanvası). Görsel dil: `high-end-visual-design` skill'i, Soft Structuralism.
+- Bileşenler (`components/`): 21st.dev'deki `ddoemonn/segmented-control` ve `ddoemonn/copy-button` bileşenlerinin saf JS/CSS uyarlamaları. `components/demo.html` ile ayrı denenebilir.
+- Yazı tipleri yerel: Plus Jakarta Sans ve Geist Mono (`assets/fonts`, SIL Open Font License).
+
 ## Ozellikler
 
 - Serbest metinden kategori tespiti

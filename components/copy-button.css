@@ -1,0 +1,25 @@
+/* Copy Button — vanilla port of ddoemonn/copy-button (21st.dev, MIT).
+   States: idle → copied / error → idle after 2s. Feedback lives on the button, not in a toast. */
+.copy-btn{--cb-ease:cubic-bezier(.32,.72,0,1);display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:0;border-radius:999px;
+  background:rgba(11,18,16,.05);color:#0b1210;font-family:inherit;font-weight:600;font-size:13px;line-height:1;cursor:pointer;user-select:none;touch-action:manipulation;
+  transition:transform 400ms var(--cb-ease),background-color 300ms var(--cb-ease),color 300ms var(--cb-ease)}
+.copy-btn:hover{background:rgba(11,18,16,.09)}
+.copy-btn:active:not(:disabled){transform:translateY(1px) scale(.98)}
+.copy-btn:focus-visible{outline:2px solid #126b55;outline-offset:3px}
+.copy-btn:disabled{opacity:.45;cursor:not-allowed}
+.copy-btn[data-status="copied"]{background:rgba(18,107,85,.12);color:#0e5a48}
+.copy-btn[data-status="error"]{background:rgba(162,58,42,.1);color:#9a2f20}
+:root.dark .copy-btn{background:rgba(255,255,255,.07);color:#edf0f2}
+:root.dark .copy-btn[data-status="copied"]{background:rgba(129,213,181,.16);color:#bff0dc}
+:root.dark .copy-btn[data-status="error"]{background:rgba(255,120,100,.14);color:#ffb4a6}
+.copy-btn__icons,.copy-btn__labels{display:grid;justify-items:start}
+.copy-btn__icons>svg,.copy-btn__labels>span{grid-area:1/1}
+.copy-btn__icons>svg{width:16px;height:16px;opacity:0;transform:scale(.92);transition:opacity 320ms var(--cb-ease),transform 320ms var(--cb-ease)}
+.copy-btn__labels>span{white-space:nowrap;opacity:0;transform:translateY(3px);filter:blur(3px);transition:opacity 320ms var(--cb-ease),transform 320ms var(--cb-ease),filter 320ms var(--cb-ease)}
+.copy-btn[data-status="idle"] .cb-idle,.copy-btn[data-status="copied"] .cb-copied,.copy-btn[data-status="error"] .cb-error{opacity:1;transform:none;filter:none}
+.copy-btn .cb-check path{stroke-dasharray:12;stroke-dashoffset:12;transition:stroke-dashoffset 260ms var(--cb-ease)}
+.copy-btn[data-status="copied"] .cb-check path{stroke-dashoffset:0}
+.copy-btn.is-icon-only{width:44px;padding:0;justify-content:center}
+.copy-btn.is-icon-only .copy-btn__labels{display:none}
+.cb-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){.copy-btn,.copy-btn *{transition:none!important}}

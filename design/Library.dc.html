@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Kütüphane</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F2;color:#0B1210;font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:#126B55}a:hover{color:#0C4D3D}
+.mono{font-family:"Geist Mono",ui-monospace,monospace}
+.muted{color:#5A635F}
+.shell{background:rgba(11,18,16,.035);box-shadow:inset 0 0 0 1px rgba(11,18,16,.06);padding:6px;border-radius:30px}
+.core{background:#FFFFFF;border-radius:24px;box-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 1px 2px rgba(11,18,16,.04),0 30px 60px -30px rgba(11,18,16,.16)}
+.shell-dark{background:#0B1210;padding:6px;border-radius:30px;box-shadow:0 40px 80px -40px rgba(11,18,16,.55)}
+.core-dark{background:#111A17;border-radius:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.05);color:#E4ECE8}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:5px 12px;border-radius:999px;background:rgba(18,107,85,.08);color:#0E5A48;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:44px;border-radius:999px;font:600 13px "Plus Jakarta Sans",sans-serif;text-decoration:none;border:0;cursor:pointer;box-sizing:border-box;transition:transform 600ms cubic-bezier(.32,.72,0,1),background-color 600ms cubic-bezier(.32,.72,0,1)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#0B1210;color:#FFFFFF;padding:5px 5px 5px 20px}
+.btn-primary:hover{background:#126B55;color:#FFFFFF}
+.btn .ic{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center;transition:transform 600ms cubic-bezier(.32,.72,0,1)}
+.btn:hover .ic{transform:translate(2px,-1px) scale(1.05)}
+.btn-quiet{background:rgba(11,18,16,.05);color:#0B1210;padding:0 16px}
+.btn-quiet:hover{background:rgba(11,18,16,.09);color:#0B1210}
+.btn-mint{background:#9FE6CA;color:#062019;padding:5px 5px 5px 18px}
+.btn-mint .ic{background:rgba(6,32,25,.1)}
+.btn-glass{background:rgba(255,255,255,.07);color:#E4ECE8;padding:0 16px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.icon-btn{width:44px;height:44px;min-height:44px;padding:0;justify-content:center}
+.star{width:40px;height:40px;border-radius:50%;border:0;background:rgba(11,18,16,.04);display:grid;place-items:center;cursor:pointer;color:#6E7772}
+.star[aria-pressed="true"]{color:#B7791F;background:#FBF1DD}
+.seg{display:flex;padding:4px;gap:2px;background:rgba(11,18,16,.05);border-radius:999px}
+.seg button{min-height:40px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:#5A635F;font:500 13px "Plus Jakarta Sans",sans-serif;cursor:pointer}
+.seg button[aria-pressed="true"]{background:#FFFFFF;color:#0B1210;box-shadow:0 1px 2px rgba(11,18,16,.06),0 6px 16px -8px rgba(11,18,16,.18)}
+.tag{padding:5px 11px;border-radius:999px;background:rgba(11,18,16,.05);font-size:11px;font-weight:500}
+.cat{padding:5px 11px;border-radius:999px;background:rgba(18,107,85,.1);color:#0E5A48;font-size:11px;font-weight:600}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+select,input{font:inherit;color:#0B1210}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.rise{animation:rise 900ms cubic-bezier(.32,.72,0,1) both}
+.d1{animation-delay:80ms}.d2{animation-delay:160ms}.d3{animation-delay:240ms}
+</style>
+</helmet>
+<div style="width:1440px;height:1240px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F4F2">
+  <header style="padding-top:24px;display:flex;justify-content:center">
+    <nav aria-label="Ana gezinme" style="display:flex;align-items:center;gap:24px;padding:6px 6px 6px 14px;border-radius:999px;background:rgba(255,255,255,.72);backdrop-filter:blur(24px);box-shadow:inset 0 0 0 1px rgba(11,18,16,.06),0 20px 40px -24px rgba(11,18,16,.2)">
+      <span style="display:flex;align-items:center;gap:10px">
+        <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg4" x1="11" x2="52" y1="8" y2="56" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#9FE6CA"/><stop offset=".52" stop-color="#126B55"/><stop offset="1" stop-color="#0E3329"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="#101413"/><path fill="url(#lg4)" d="M18 15h20.5C49.1 15 56 21.3 56 31.1 56 41 48.9 47 38.6 47H30v7H18V15Zm12 10.7v10.6h8.2c3.6 0 5.8-2 5.8-5.2 0-3.3-2.2-5.4-5.8-5.4H30Z"/><path fill="#F7FAF8" d="m33.8 30.1 16.1 5.4-7.2 3.1 5.6 8.4-5.4 3.6-5.6-8.4-5.8 5.5 2.3-17.6Z"/></svg>
+        <strong style="font-size:14px;font-weight:700;letter-spacing:-.01em">Prompt Generator</strong>
+      </span>
+      <span style="display:flex;gap:2px">
+        <a href="Main.dc.html" style="padding:10px 16px;border-radius:999px;color:#5A635F;text-decoration:none;font-weight:500;font-size:13px">Oluştur</a>
+        <a href="Library.dc.html" aria-current="page" style="padding:10px 16px;border-radius:999px;background:rgba(11,18,16,.06);color:#0B1210;text-decoration:none;font-weight:600;font-size:13px">Kütüphane</a>
+      </span>
+      <span style="display:flex;gap:4px">
+        <a href="Main.dc.html" class="btn btn-primary" style="font-size:13px">Yeni çalışma<span class="ic" style="width:32px;height:32px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></span></a>
+        <button class="btn btn-quiet icon-btn" type="button" aria-label="Koyu tema"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+      </span>
+    </nav>
+  </header>
+
+  <main style="flex-grow:1;padding:64px 80px 96px;box-sizing:border-box;display:flex;flex-direction:column;gap:40px">
+    <div class="rise" style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <span class="eyebrow">Kütüphane</span>
+        <h1 style="margin:0;font-size:68px;line-height:1;font-weight:600;letter-spacing:-.045em">Çalışmaların.</h1>
+        <p class="muted" style="margin:0;font-size:17px">6 çalışma · 2 favori · Yalnızca bu tarayıcıda saklanır.</p>
+      </div>
+      <button type="button" class="btn btn-quiet" style="color:#9A2F20">Geçmişi temizle</button>
+    </div>
+
+    <div class="rise d1" style="display:flex;align-items:center;gap:10px;padding:6px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(11,18,16,.06),0 20px 40px -28px rgba(11,18,16,.18)">
+      <label style="flex-grow:1;display:flex;align-items:center;gap:10px;min-height:44px;padding:0 16px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A635F" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <span class="sr">Ara</span>
+        <input type="search" placeholder="Fikir veya prompt ara" style="border:0;outline:0;flex-grow:1;background:transparent;font-size:15px">
+      </label>
+      <label class="sr" for="cat">Kategori</label>
+      <select id="cat" style="min-height:44px;padding:0 16px;border:0;border-radius:999px;background:rgba(11,18,16,.05);width:220px"><option>Tüm kategoriler</option><option>Marka / Kimlik</option><option>Ürün Görseli</option><option>Video</option></select>
+      <div class="seg" role="group" aria-label="Göster"><button type="button" aria-pressed="true">Tümü</button><button type="button" aria-pressed="false">Favoriler</button></div>
+    </div>
+
+    <div class="rise d2" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px">
+      <article class="shell-dark" style="grid-column:span 7;grid-row:span 2">
+        <div class="core-dark" style="padding:30px;display:flex;flex-direction:column;gap:18px;height:100%;box-sizing:border-box">
+          <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:6px"><span style="padding:5px 11px;border-radius:999px;background:rgba(159,230,202,.14);color:#BFF0DC;font-size:11px;font-weight:600">Marka / Kimlik</span><span style="padding:5px 11px;border-radius:999px;background:rgba(255,255,255,.06);font-size:11px">ChatGPT</span></div><button type="button" class="star" aria-label="Favorilerden çıkar" aria-pressed="true" style="background:rgba(251,241,221,.12);color:#F2C46D"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></button></div>
+          <span class="mono" style="font-size:11px;letter-spacing:.14em;color:#8FA39A">SON ÇALIŞMA · 27.09.2026 14:32</span>
+          <strong style="font-size:34px;font-weight:600;line-height:1.1;letter-spacing:-.035em;max-width:520px">Bir kahve markası için sade, sembolik bir logo.</strong>
+          <p class="mono" style="margin:0;font-size:12.5px;line-height:1.8;color:#A9B8B1">Kullanım yeri: logo, app icon, Instagram profil. Hedef kitle: Şehirde yaşayan, üçüncü dalga kahve seven 25-40 yaş. Marka kişiliği: sakin, rafine, güven veren. Anlam ve metafor: kahve çekirdeği ve negatif alan K harfi…</p>
+          <div style="display:flex;gap:8px;margin-top:auto"><a href="Main.dc.html" class="btn btn-mint">Yükle ve düzenle<span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></span></a><button type="button" class="btn btn-glass">Kopyala</button></div>
+        </div>
+      </article>
+      <article class="shell" style="grid-column:span 5">
+        <div class="core" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:6px"><span class="cat">Seri İçerik</span><span class="tag">Gemini</span></div><button type="button" class="star" aria-label="Favorilerden çıkar" aria-pressed="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></button></div>
+          <strong style="font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.3">Kahve aboneliği için 9’lu Instagram serisi.</strong>
+          <p class="mono muted" style="margin:0;font-size:12px;line-height:1.7">--- POST 1 --- Seri öğesi 1/9. lansman…</p>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span class="muted" style="font-size:12px">25.09.2026</span><div style="display:flex;gap:4px"><button type="button" class="btn btn-quiet">Kopyala</button><a href="Main.dc.html" class="btn btn-quiet">Yükle</a></div></div>
+        </div>
+      </article>
+      <article class="shell" style="grid-column:span 5">
+        <div class="core" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:6px"><span class="cat">Ürün Görseli</span><span class="tag">Leonardo.ai</span></div><button type="button" class="star" aria-label="Favorilere ekle" aria-pressed="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></button></div>
+          <strong style="font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.3">Cam şişede soğuk kahve, mermer tezgahta.</strong>
+          <p class="mono muted" style="margin:0;font-size:12px;line-height:1.7">Yüzey: mat kağıt etiket, metal kapak, Işık: yumuşak sabah ışığı…</p>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span class="muted" style="font-size:12px">26.09.2026</span><div style="display:flex;gap:4px"><button type="button" class="btn btn-quiet">Kopyala</button><a href="Main.dc.html" class="btn btn-quiet">Yükle</a></div></div>
+        </div>
+      </article>
+      <article class="shell" style="grid-column:span 4">
+        <div class="core" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:6px"><span class="cat">Video</span><span class="tag">ChatGPT</span></div><button type="button" class="star" aria-label="Favorilere ekle" aria-pressed="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></button></div>
+          <strong style="font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.3">8 saniyelik ürün tanıtım videosu.</strong>
+          <p class="mono muted" style="margin:0;font-size:12px;line-height:1.7">0.0–2.7s: Kuruluş ve ortam · 5.3–8.0s: logo ve tek CTA</p>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span class="muted" style="font-size:12px">24.09.2026</span><a href="Main.dc.html" class="btn btn-quiet">Yükle</a></div>
+        </div>
+      </article>
+      <article class="shell" style="grid-column:span 4">
+        <div class="core" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:6px"><span class="cat">Fotogerçekçi</span><span class="tag">Bing</span></div><button type="button" class="star" aria-label="Favorilere ekle" aria-pressed="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></button></div>
+          <strong style="font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.3">Modern kahve dükkanı iç mekanı, altın saat.</strong>
+          <p class="mono muted" style="margin:0;font-size:12px;line-height:1.7">Kamera: 35mm, low angle, shallow depth of field…</p>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span class="muted" style="font-size:12px">22.09.2026</span><a href="Main.dc.html" class="btn btn-quiet">Yükle</a></div>
+        </div>
+      </article>
+      <article class="shell" style="grid-column:span 4">
+        <div class="core" style="padding:22px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:6px"><span class="cat">Sanatsal</span><span class="tag">Playground</span></div><button type="button" class="star" aria-label="Favorilere ekle" aria-pressed="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></svg></button></div>
+          <strong style="font-size:18px;font-weight:600;letter-spacing:-.02em;line-height:1.3">Sisli dağ manzarası, risograph poster.</strong>
+          <p class="mono muted" style="margin:0;font-size:12px;line-height:1.7">Atmosfer: melankolik, Medya: risograph…</p>
+          <div style="display:flex;align-items:center;justify-content:space-between"><span class="muted" style="font-size:12px">20.09.2026</span><a href="Main.dc.html" class="btn btn-quiet">Yükle</a></div>
+        </div>
+      </article>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

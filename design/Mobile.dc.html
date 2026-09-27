@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Mobil · Detaylar</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F3F4F2;color:#0B1210;font-family:"Plus Jakarta Sans",system-ui,sans-serif;font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:#126B55}a:hover{color:#0C4D3D}
+.mono{font-family:"Geist Mono",ui-monospace,monospace}
+.muted{color:#5A635F}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;border-radius:999px;font:600 15px "Plus Jakarta Sans",sans-serif;border:0;cursor:pointer;box-sizing:border-box;transition:transform 600ms cubic-bezier(.32,.72,0,1)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#0B1210;color:#FFFFFF;padding:6px 6px 6px 24px;justify-content:space-between}
+.btn .ic{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.btn-quiet{background:rgba(11,18,16,.05);color:#0B1210;padding:0 22px}
+.round{width:44px;height:44px;border-radius:50%;border:0;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(11,18,16,.06);display:grid;place-items:center;cursor:pointer;color:#0B1210}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border-radius:999px;border:0;background:rgba(18,107,85,.06);box-shadow:inset 0 0 0 1px rgba(18,107,85,.18);color:#0E5A48;font:500 13px "Plus Jakarta Sans",sans-serif;cursor:pointer;text-align:left}
+textarea{font:inherit;color:#0B1210}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+.rise{animation:rise 900ms cubic-bezier(.32,.72,0,1) both}
+.d1{animation-delay:80ms}.d2{animation-delay:160ms}
+</style>
+</helmet>
+<div style="width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F4F2;overflow:hidden">
+  <header style="padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between">
+    <button type="button" class="round" aria-label="Önceki adım"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;background:#FFFFFF;box-shadow:inset 0 0 0 1px rgba(11,18,16,.06)"><span class="mono muted" style="font-size:11px">02 / 03</span><strong style="font-size:13px;font-weight:600">Detaylar</strong></div>
+    <button type="button" class="round" aria-label="Menü"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M5 9h14"/><path d="M5 15h14"/></svg></button>
+  </header>
+
+  <main style="flex-grow:1;padding:32px 16px 16px;display:flex;flex-direction:column;gap:22px">
+    <div class="rise" style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between"><span class="mono muted" style="font-size:11px">SORU 02 / 05</span><span style="font-size:11px;font-weight:600;color:#0E5A48">Marka / Kimlik</span></div>
+      <div role="progressbar" aria-valuemin="0" aria-valuemax="5" aria-valuenow="1" aria-label="İlerleme" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px">
+        <span style="height:4px;border-radius:2px;background:#126B55"></span><span style="height:4px;border-radius:2px;background:#0B1210"></span><span style="height:4px;border-radius:2px;background:rgba(11,18,16,.1)"></span><span style="height:4px;border-radius:2px;background:rgba(11,18,16,.1)"></span><span style="height:4px;border-radius:2px;background:rgba(11,18,16,.1)"></span>
+      </div>
+    </div>
+    <label for="m-answer" class="rise d1" style="font-size:36px;line-height:1.05;font-weight:600;letter-spacing:-.04em">Hedef kitle kim?</label>
+    <div class="rise d2" style="background:rgba(11,18,16,.035);box-shadow:inset 0 0 0 1px rgba(11,18,16,.06);padding:5px;border-radius:26px">
+      <textarea id="m-answer" rows="4" style="display:block;width:100%;box-sizing:border-box;border:0;outline:0;border-radius:21px;padding:16px;font-size:16px;line-height:1.55;resize:none;background:#FFFFFF;box-shadow:0 20px 40px -24px rgba(11,18,16,.16)">Şehirde yaşayan, üçüncü dalga kahve seven 25-40 yaş</textarea>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-start">
+      <span class="muted" style="font-size:12px">Örnekten başla</span>
+      <button type="button" class="chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>premium kahve seven 25-40 yaş arası kitle</button>
+    </div>
+  </main>
+
+  <div style="margin:0 12px 10px;background:#0B1210;color:#E4ECE8;border-radius:24px;padding:6px">
+    <button type="button" style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#111A17;border:0;border-radius:19px;color:#E4ECE8;padding:12px 14px;cursor:pointer;font:inherit;text-align:left;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)">
+      <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#8FA39A">Prompt önizleme</span><span class="mono" style="font-size:11.5px;color:#A9B8B1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Şu fikir için bir görsel oluştur: Bir kahve…</span></span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="m18 15-6-6-6 6"/></svg>
+    </button>
+  </div>
+  <div style="padding:6px 16px 28px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px">
+    <button type="button" class="btn btn-quiet">Atla</button>
+    <button type="button" class="btn btn-primary">Sonraki<span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></span></button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
