@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prompt Generator</title><link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+<div class="app-shell">
+<header>
+<nav class="topbar" aria-label="Ana gezinme">
+<div class="brand-lockup"><span class="brand-mark">PG</span>Prompt Generator</div>
+<div class="topbar-actions">
+<button id="resetBtn" class="ghost-button" type="button">Yeni çalışma</button>
+<button id="themeBtn" class="ghost-button icon-button" title="Koyu tema" aria-label="Koyu tema" aria-pressed="false" type="button"><img src="assets/moon.svg" alt=""></button>
+</div>
+</nav>
+<div class="hero-grid"><div><h1>Fikrinden üretime.</h1><p>Görsel, marka ve video promptları</p></div><span class="helper">Kişisel çalışma alanın</span></div>
+</header>
+<main class="workspace">
+<section class="panel composer-panel" aria-labelledby="composerTitle">
+<div class="panel-heading"><div><p class="eyebrow">01 / BAŞLANGIÇ</p><h2 id="composerTitle">Ne oluşturmak istiyorsun?</h2></div></div>
+<label class="field"><span>Fikrin</span><textarea id="ideaInput" rows="4" placeholder="Örn. Bir kahve markası için sade, sembolik bir logo."></textarea></label>
+<div class="form-grid">
+<label class="field"><span>Kategori</span><select id="categorySelect"><option value="auto">Otomatik belirle</option></select></label>
+<label class="field"><span>Hedef araç</span><select id="toolSelect"><option>ChatGPT (DALL-E 3)</option><option>Gemini (Imagen)</option><option>Bing Image Creator</option><option>Leonardo.ai (free tier)</option><option>Playground (free tier)</option></select></label>
+<label class="field"><span>Detay seviyesi</span><select id="qualitySelect"><option value="simple">Kısa</option><option value="detailed">Detaylı</option><option value="professional" selected>Profesyonel</option></select></label>
+<label class="field"><span>Sanat yönetimi</span><select id="skillIntensity"><option value="normal">Temel</option><option value="premium" selected>Rafine</option><option value="agency">Kapsamlı</option></select></label>
+<label class="field"><span>Şablon dili</span><select id="languageSelect"><option value="tr" selected>Türkçe</option><option value="en">English</option></select></label>
+</div>
+<p class="helper" id="languageNote">Serbest metinler yazdığın dilde korunur; otomatik çeviri yapılmaz.</p>
+<div class="button-row"><span id="detectedBadge" class="badge">Kategori seçilmedi</span></div>
+<div class="skill-note"><span>brandkit</span><span>high-end-visual-design</span></div>
+</section>
+<section class="panel questions-panel" aria-labelledby="questionsTitle">
+<div class="panel-heading"><div><p class="eyebrow">02 / DETAYLAR</p><h2 id="questionsTitle">Briefini netleştir</h2></div><span id="progressBadge" class="badge">0/0</span></div>
+<div class="progress-track"><div id="progressFill" style="width:0%"></div></div>
+<div id="questionList" class="question-list empty-state">Fikrini yaz veya bir kategori seç.</div>
+<div id="questionNav" class="question-nav" hidden>
+<button id="prevQuestion" class="ghost-button" type="button">Önceki</button><span id="questionPosition"></span><button id="nextQuestion" class="secondary-button" type="button">Sonraki</button>
+</div>
+</section>
+<section class="panel reference-panel" aria-labelledby="referenceTitle">
+<details><summary id="referenceTitle">Referans ve kısıtlar <span class="badge">İsteğe bağlı</span></summary>
+<label class="upload-box"><input id="referenceInput" type="file" accept="image/png,image/jpeg,application/pdf" aria-label="Referans dosyası"><span>Referans dosyası seç</span><small>PNG, JPG veya PDF · En fazla 10 MB</small></label>
+<p class="helper">Dosya yalnızca önizlenir. Aşağıdaki notların prompta eklenir.</p>
+<div id="previewArea" class="preview-area empty-state"></div>
+<div class="form-grid">
+<label class="field"><span>Renkler</span><input id="refColor" placeholder="Örn. #163D32, kırık beyaz"></label>
+<label class="field"><span>Tipografi</span><input id="refTypography" placeholder="Örn. zarif serif, geniş grotesk"></label>
+<label class="field"><span>Görsel dil</span><input id="refStyle" placeholder="Örn. mat yüzey, doğal ışık"></label>
+<label class="field"><span>İstemediğin öğeler</span><input id="negativeInput" placeholder="Örn. neon, kalabalık arka plan"></label>
+</div></details>
+</section>
+<section class="panel brand-panel" aria-labelledby="brandTitle">
+<details><summary id="brandTitle">Marka profili <span id="brandStatus" class="badge">İsteğe bağlı</span></summary>
+<label class="field"><span>Kayıtlı markalar</span><select id="brandSelect"><option value="">Profil seç</option></select></label>
+<div class="form-grid">
+<label class="field"><span>Marka adı</span><input id="brandName" placeholder="Örn. Kora"></label>
+<label class="field"><span>Renk paleti</span><input id="brandPalette" placeholder="Örn. #163D32, #F5F5F5"></label>
+<label class="field"><span>Tipografi</span><input id="brandTypography" placeholder="Örn. rafine serif"></label>
+<label class="field"><span>Markanın tonu</span><input id="brandVoice" placeholder="Örn. sakin, güven veren"></label>
+</div>
+<div class="button-row"><button id="saveBrandBtn" class="secondary-button" type="button">Profili kaydet</button><button id="clearBrandBtn" class="ghost-button" type="button">Alanları temizle</button></div>
+</details>
+</section>
+<section class="panel output-panel" aria-labelledby="outputTitle">
+<div class="panel-heading"><div><p class="eyebrow">03 / SONUÇ</p><h2 id="outputTitle">Promptun</h2></div><div class="output-actions">
+<button id="copyBtn" class="ghost-button icon-button" type="button" title="Promptu kopyala" aria-label="Promptu kopyala" disabled><img src="assets/copy.svg" alt=""></button>
+<button id="favoriteBtn" class="ghost-button icon-button" type="button" title="Favorilere ekle" aria-label="Favorilere ekle" aria-pressed="false" disabled><img src="assets/star.svg" alt=""></button>
+</div></div>
+<div class="button-row split-row"><button id="generateBtn" class="primary-button" type="button" disabled>Prompt oluştur</button><button id="variantBtn" class="secondary-button" type="button" disabled>3 alternatif oluştur</button></div>
+<pre id="promptOutput" class="prompt-output" tabindex="0">Promptun burada görünecek.</pre>
+<div id="tipsOutput" class="tips-output"></div><div id="variantsOutput" class="variants-output"></div>
+</section>
+<section class="panel history-panel" aria-labelledby="historyTitle">
+<div class="panel-heading"><div><p class="eyebrow">KÜTÜPHANE</p><h2 id="historyTitle">Geçmiş çalışmalar</h2></div><button id="clearHistoryBtn" class="ghost-button" type="button" disabled>Geçmişi temizle</button></div>
+<div class="form-grid history-toolbar">
+<label class="field"><span>Ara</span><input id="historySearch" type="search" placeholder="Fikir veya prompt ara"></label>
+<label class="field"><span>Kategori</span><select id="historyCategory"><option value="">Tüm kategoriler</option></select></label>
+<label class="field"><span>Göster</span><select id="historyMode"><option value="all">Tüm çalışmalar</option><option value="favorites">Favoriler</option></select></label>
+</div><div id="historyList" class="history-list empty-state">Henüz çalışma yok.</div>
+</section>
+</main></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+<form method="dialog"><h2 id="confirmTitle">Devam edilsin mi?</h2><p id="confirmMessage"></p><div class="button-row"><button class="secondary-button" value="cancel" autofocus>Vazgeç</button><button id="confirmAction" class="primary-button" value="confirm">Temizle</button></div></form>
+</dialog>
+<script src="app.js?v=2"></script>
+</body></html>
