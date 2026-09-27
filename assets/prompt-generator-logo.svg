@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Prompt Generator logo</title>
+  <desc id="desc">A geometric P mark with a cursor-shaped prompt path.</desc>
+  <defs>
+    <linearGradient id="pg-accent" x1="11" x2="52" y1="8" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9FE6CA"/>
+      <stop offset="0.52" stop-color="#126B55"/>
+      <stop offset="1" stop-color="#0E3329"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="#101413"/>
+  <rect x="6" y="6" width="52" height="52" rx="12" fill="none" stroke="#FFFFFF" stroke-opacity=".11"/>
+  <path fill="url(#pg-accent)" d="M18 15h20.5C49.1 15 56 21.3 56 31.1 56 41 48.9 47 38.6 47H30v7H18V15Zm12 10.7v10.6h8.2c3.6 0 5.8-2 5.8-5.2 0-3.3-2.2-5.4-5.8-5.4H30Z"/>
+  <path fill="#F7FAF8" d="m33.8 30.1 16.1 5.4-7.2 3.1 5.6 8.4-5.4 3.6-5.6-8.4-5.8 5.5 2.3-17.6Z"/>
+  <path fill="#101413" fill-opacity=".18" d="m35.4 32.6 10.8 3.6-5.4 2.3 4.8 7.2-1.9 1.3-4.9-7.3-4.2 4 1-11.1Z"/>
+</svg>
